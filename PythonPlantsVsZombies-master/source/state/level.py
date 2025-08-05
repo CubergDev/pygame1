@@ -311,39 +311,15 @@ class Level(tool.State):
                     idols.append((p, i))
 
         for idol, row in idols:
-            idol_x, idol_y = self.map.getMapIndex(idol.rect.centerx, idol.rect.bottom)
-            for i in range(max(0, row-2), min(self.map_y_len, row+3)):
-                for other in self.plant_groups[i]:
+            idol_x, _ = self.map.getMapIndex(idol.rect.centerx, idol.rect.bottom)
+            for row_index in range(max(0, row - 2), min(self.map_y_len, row + 3)):
+                for other in self.plant_groups[row_index]:
                     other_x, _ = self.map.getMapIndex(other.rect.centerx, other.rect.bottom)
-                    if abs(other_x - idol_x) <= 2 and abs(i - row) <= 2:
+                    dx = other_x - idol_x
+                    dy = row_index - row
+                    if dx * dx + dy * dy <= 4:
                         other.fire_rate_multiplier *= 1.2
                         if other.name == c.EOMUKVENDOR:
-                            other.sun_multiplier *= 1.1
-
-    def addBurnArea(self, fire):
-        self.fire_group.add(fire)
-
-    def applyIdolBuffs(self):
-        # reset multipliers
-        for i in range(self.map_y_len):
-            for p in self.plant_groups[i]:
-                p.fire_rate_multiplier = 1
-                p.sun_multiplier = 1
-
-        idols = []
-        for i in range(self.map_y_len):
-            for p in self.plant_groups[i]:
-                if p.name == c.PUFFSHROOM:
-                    idols.append((p, i))
-
-        for idol, row in idols:
-            idol_x, idol_y = self.map.getMapIndex(idol.rect.centerx, idol.rect.bottom)
-            for i in range(max(0, row-2), min(self.map_y_len, row+3)):
-                for other in self.plant_groups[i]:
-                    other_x, _ = self.map.getMapIndex(other.rect.centerx, other.rect.bottom)
-                    if abs(other_x - idol_x) <= 2 and abs(i - row) <= 2:
-                        other.fire_rate_multiplier *= 1.2
-                        if other.name == c.SUNFLOWER:
                             other.sun_multiplier *= 1.1
 
     def killPlant(self, plant):

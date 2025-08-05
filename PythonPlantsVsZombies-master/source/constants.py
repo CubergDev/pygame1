@@ -73,13 +73,16 @@ PLANT_IMAGE_RECT = 'plant_image_rect'
 CAR = 'car'
 SUN = 'Sun'
 
-# Hero identifiers using placeholder assets
+# Korean hero identifiers referencing original plant assets
 SOJUBOTTLESLINGSHOT = 'Peashooter'
 EOMUKVENDOR = 'SunFlower'
 SUITCASEBARRICADE = 'WallNut'
 TAEKWONDOGUARD = 'RepeaterPea'
 MOLOTOVSTUDENT = 'CherryBomb'
 KPOPIDOL = 'PuffShroom'
+
+PUFFSHROOM = KPOPIDOL
+
 
 PLANT_HEALTH = 5
 SUITCASEBARRICADE_HEALTH = 20
@@ -103,6 +106,9 @@ CARD_SUITCASEBARRICADE = 'card_wallnut'
 CARD_TAEKWONDOGUARD = 'card_repeaterpea'
 CARD_MOLOTOVSTUDENT = 'card_cherrybomb'
 CARD_KPOPIDOL = 'card_puffshroom'
+
+CARD_PUFFSHROOM = CARD_KPOPIDOL
+
 
 #BULLET INFO
 BULLET_PEA = 'PeaNormal'
