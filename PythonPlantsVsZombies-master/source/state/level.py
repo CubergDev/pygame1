@@ -85,18 +85,10 @@ class Level(tool.State):
                 self.map.setMapGridType(x, y, c.MAP_EXIST)
 
     def initState(self):
-        if c.CHOOSEBAR_TYPE in self.map_data:
-            self.bar_type = self.map_data[c.CHOOSEBAR_TYPE]
-        else:
-            self.bar_type = c.CHOOSEBAR_STATIC
-
-        if self.bar_type == c.CHOOSEBAR_STATIC:
-            self.initChoose()
-        else:
-            card_pool = menubar.getCardPool(self.map_data[c.CARD_POOL])
-            self.initPlay(card_pool)
-            if self.bar_type == c.CHOSSEBAR_BOWLING:
-                self.initBowlingMap()
+        # Skip the card selection phase and start directly with the six
+        # predefined characters
+        self.bar_type = c.CHOOSEBAR_STATIC
+        self.initPlay(menubar.all_card_list)
 
     def initChoose(self):
         self.state = c.CHOOSE
