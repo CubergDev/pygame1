@@ -1,4 +1,4 @@
-__author__ = 'marble_xu'
+__author__ = 'from cuberg with love'
 
 import os
 import json
@@ -98,7 +98,7 @@ def get_image(sheet, x, y, width, height, colorkey=c.BLACK, scale=1):
 def load_image_frames(directory, image_name, colorkey, accept):
     frame_list = []
     tmp = {}
-    # image_name is "Peashooter", pic name is 'Peashooter_1', get the index 1
+    # image_name is "SojuBottleSlingshot", pic name is 'SojuBottleSlingshot_1', get the index 1
     index_start = len(image_name) + 1 
     frame_num = 0;
     for pic in os.listdir(directory):
@@ -136,7 +136,7 @@ def load_all_gfx(directory, colorkey=c.WHITE, accept=('.png', '.jpg', '.bmp', '.
                             image_name, _ = os.path.splitext(name3)
                             graphics[image_name] = load_image_frames(dir3, image_name, colorkey, accept)
                         else:
-                            # e.g. pics under the folder resources\graphics\Plants\Peashooter
+                            # e.g. pics under the folder resources\graphics\Plants\SojuBottleSlingshot
                             image_name, _ = os.path.splitext(name2)
                             graphics[image_name] = load_image_frames(dir2, image_name, colorkey, accept)
                             break

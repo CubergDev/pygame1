@@ -1,14 +1,14 @@
 {
     "background_type":0,
     "choosebar_type":1,
+    "init_sun_value":300,
     "card_pool":[
-        {"name":"Peashooter"},
-        {"name":"SnowPea"},
-        {"name":"WallNut"},
-        {"name":"CherryBomb"},
-        {"name":"RepeaterPea"},
-        {"name":"Chomper"},
-        {"name":"PotatoMine"}
+        {"name":"SojuBottleSlingshot"},
+        {"name":"EomukVendor"},
+        {"name":"SuitcaseBarricade"},
+        {"name":"TaekwondoGuard"},
+        {"name":"MolotovStudent"},
+        {"name":"KPopIdol"}
     ],
     "zombie_list":[
         {"time": 1000, "map_y":1, "name":"Zombie"},

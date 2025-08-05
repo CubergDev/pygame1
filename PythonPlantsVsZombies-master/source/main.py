@@ -1,4 +1,4 @@
-__author__ = 'marble_xu'
+__author__ = 'from cuberg with love'
 
 from . import tool
 from . import constants as c

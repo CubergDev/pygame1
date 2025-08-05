@@ -1,4 +1,4 @@
-__author__ = 'marble_xu'
+__author__ = 'from cuberg with love'
 
 START_LEVEL_NUM = 1
 
@@ -12,7 +12,6 @@ GRID_X_LEN = 9
 GRID_Y_LEN = 5
 GRID_X_SIZE = 80
 GRID_Y_SIZE = 100
-
 
 WHITE        = (255, 255, 255)
 NAVYBLUE     = ( 60,  60, 100)
@@ -73,35 +72,22 @@ CARD_MOVE_TIME = 60
 PLANT_IMAGE_RECT = 'plant_image_rect'
 CAR = 'car'
 SUN = 'Sun'
-SUNFLOWER = 'SunFlower'
-PEASHOOTER = 'Peashooter'
-SNOWPEASHOOTER = 'SnowPea'
-WALLNUT = 'WallNut'
-CHERRYBOMB = 'CherryBomb'
-THREEPEASHOOTER = 'Threepeater'
-REPEATERPEA = 'RepeaterPea'
-CHOMPER = 'Chomper'
-CHERRY_BOOM_IMAGE = 'Boom'
-PUFFSHROOM = 'PuffShroom'
-POTATOMINE = 'PotatoMine'
-SQUASH = 'Squash'
-SPIKEWEED = 'Spikeweed'
-JALAPENO = 'Jalapeno'
-SCAREDYSHROOM = 'ScaredyShroom'
-SUNSHROOM = 'SunShroom'
-ICESHROOM = 'IceShroom'
-HYPNOSHROOM = 'HypnoShroom'
-WALLNUTBOWLING = 'WallNutBowling'
-REDWALLNUTBOWLING = 'RedWallNutBowling'
+
+# Hero identifiers using placeholder assets
+SOJUBOTTLESLINGSHOT = 'Peashooter'
+EOMUKVENDOR = 'SunFlower'
+SUITCASEBARRICADE = 'WallNut'
+TAEKWONDOGUARD = 'RepeaterPea'
+MOLOTOVSTUDENT = 'CherryBomb'
+KPOPIDOL = 'PuffShroom'
 
 PLANT_HEALTH = 5
-WALLNUT_HEALTH = 30
-WALLNUT_CRACKED1_HEALTH = 20
-WALLNUT_CRACKED2_HEALTH = 10
-WALLNUT_BOWLING_DAMAGE = 10
+SUITCASEBARRICADE_HEALTH = 20
+SUITCASEBARRICADE_CRACKED1_HEALTH = 13
+SUITCASEBARRICADE_CRACKED2_HEALTH = 7
 
 PRODUCE_SUN_INTERVAL = 7000
-FLOWER_SUN_INTERVAL = 22000
+FLOWER_SUN_INTERVAL = 12000
 SUN_LIVE_TIME = 7000
 SUN_VALUE = 25
 
@@ -111,29 +97,15 @@ FREEZE_TIME = 7500
 ICETRAP = 'IceTrap'
 
 #PLANT CARD INFO
-CARD_SUNFLOWER = 'card_sunflower'
-CARD_PEASHOOTER = 'card_peashooter'
-CARD_SNOWPEASHOOTER = 'card_snowpea'
-CARD_WALLNUT = 'card_wallnut'
-CARD_CHERRYBOMB = 'card_cherrybomb'
-CARD_THREEPEASHOOTER = 'card_threepeashooter'
-CARD_REPEATERPEA = 'card_repeaterpea'
-CARD_CHOMPER = 'card_chomper'
-CARD_PUFFSHROOM = 'card_puffshroom'
-CARD_POTATOMINE = 'card_potatomine'
-CARD_SQUASH = 'card_squash'
-CARD_SPIKEWEED = 'card_spikeweed'
-CARD_JALAPENO = 'card_jalapeno'
-CARD_SCAREDYSHROOM = 'card_scaredyshroom'
-CARD_SUNSHROOM = 'card_sunshroom'
-CARD_ICESHROOM = 'card_iceshroom'
-CARD_HYPNOSHROOM = 'card_hypnoshroom'
-CARD_REDWALLNUT = 'card_redwallnut'
+CARD_SOJUBOTTLESLINGSHOT = 'card_peashooter'
+CARD_EOMUKVENDOR = 'card_sunflower'
+CARD_SUITCASEBARRICADE = 'card_wallnut'
+CARD_TAEKWONDOGUARD = 'card_repeaterpea'
+CARD_MOLOTOVSTUDENT = 'card_cherrybomb'
+CARD_KPOPIDOL = 'card_puffshroom'
 
 #BULLET INFO
 BULLET_PEA = 'PeaNormal'
-BULLET_PEA_ICE = 'PeaIce'
-BULLET_MUSHROOM = 'BulletMushRoom'
 BULLET_DAMAGE_NORMAL = 1
 
 #ZOMBIE INFO
