@@ -127,6 +127,9 @@ class Plant(pg.sprite.Sprite):
         self.animate_timer = 0
         self.animate_interval = 100
         self.hit_timer = 0
+        # Buff multipliers from aura effects like KPopIdol
+        self.fire_rate_multiplier = 1
+        self.sun_multiplier = 1
 
     def loadFrames(self, frames, name, scale, color=c.BLACK):
         frame_list = tool.GFX[name]
@@ -260,11 +263,13 @@ class SunFlower(Plant):
         Plant.__init__(self, x, y, c.SUNFLOWER, c.PLANT_HEALTH, None)
         self.sun_timer = 0
         self.sun_group = sun_group
+        self.sun_interval = c.FLOWER_SUN_INTERVAL
     
     def idling(self):
+        interval = self.sun_interval / self.sun_multiplier
         if self.sun_timer == 0:
-            self.sun_timer = self.current_time - (c.FLOWER_SUN_INTERVAL - 6000)
-        elif (self.current_time - self.sun_timer) > c.FLOWER_SUN_INTERVAL:
+            self.sun_timer = self.current_time - (interval - 6000)
+        elif (self.current_time - self.sun_timer) > interval:
             self.sun_group.add(Sun(self.rect.centerx, self.rect.bottom, self.rect.right, self.rect.bottom + self.rect.h // 2))
             self.sun_timer = self.current_time
 
@@ -272,25 +277,45 @@ class PeaShooter(Plant):
     def __init__(self, x, y, bullet_group):
         Plant.__init__(self, x, y, c.PEASHOOTER, c.PLANT_HEALTH, bullet_group)
         self.shoot_timer = 0
+        self.shoot_interval = 900
         
     def attacking(self):
-        if (self.current_time - self.shoot_timer) > 2000:
+        interval = self.shoot_interval / self.fire_rate_multiplier
+        if (self.current_time - self.shoot_timer) > interval:
             self.bullet_group.add(Bullet(self.rect.right, self.rect.y, self.rect.y,
                                     c.BULLET_PEA, c.BULLET_DAMAGE_NORMAL, False))
             self.shoot_timer = self.current_time
 
 class RepeaterPea(Plant):
+    """TaekwondoGuard – melee plant that kicks nearby zombies."""
     def __init__(self, x, y, bullet_group):
-        Plant.__init__(self, x, y, c.REPEATERPEA, c.PLANT_HEALTH, bullet_group)
-        self.shoot_timer = 0
+        Plant.__init__(self, x, y, c.REPEATERPEA, c.PLANT_HEALTH, None)
+        self.attack_timer = 0
+        self.attack_interval = 2000
+        self.attack_zombie = None
+
+    def canAttack(self, zombie):
+        return self.rect.colliderect(zombie.rect)
+
+    def setAttack(self, zombie):
+        self.state = c.ATTACK
+        self.attack_zombie = zombie
+        self.attack_timer = self.current_time
 
     def attacking(self):
-        if (self.current_time - self.shoot_timer) > 2000:
-            self.bullet_group.add(Bullet(self.rect.right, self.rect.y, self.rect.y,
-                                    c.BULLET_PEA, c.BULLET_DAMAGE_NORMAL, False))
-            self.bullet_group.add(Bullet(self.rect.right + 40, self.rect.y, self.rect.y,
-                                    c.BULLET_PEA, c.BULLET_DAMAGE_NORMAL, False))
-            self.shoot_timer = self.current_time
+        if (self.attack_zombie is None or self.attack_zombie.state == c.DIE or
+            not self.canAttack(self.attack_zombie)):
+            self.setIdle()
+            return
+        interval = self.attack_interval / self.fire_rate_multiplier
+        if (self.current_time - self.attack_timer) > interval:
+            self.attack_zombie.setDamage(2)
+            self.attack_zombie.rect.x += c.GRID_X_SIZE
+            self.attack_timer = self.current_time
+
+    def setIdle(self):
+        self.state = c.IDLE
+        self.attack_zombie = None
 
 class ThreePeaShooter(Plant):
     def __init__(self, x, y, bullet_groups, map_y):
@@ -348,42 +373,46 @@ class WallNut(Plant):
             self.cracked2 = True
 
 class CherryBomb(Plant):
-    def __init__(self, x, y):
-        Plant.__init__(self, x, y, c.CHERRYBOMB, c.WALLNUT_HEALTH, None)
+    """MolotovStudent – periodically spawns a burning area that damages zombies."""
+    def __init__(self, x, y, level):
+        Plant.__init__(self, x, y, c.CHERRYBOMB, c.PLANT_HEALTH, None)
         self.state = c.ATTACK
-        self.start_boom = False
-        self.bomb_timer = 0
-        self.explode_y_range = 1
-        self.explode_x_range = c.GRID_X_SIZE
-    
-    def setBoom(self):
-        frame = tool.GFX[c.CHERRY_BOOM_IMAGE]
-        rect = frame.get_rect()
-        width, height = rect.w, rect.h
-                
-        old_rect = self.rect
-        image = tool.get_image(frame, 0, 0, width, height, c.BLACK, 1)
-        self.image = image
-        self.rect = image.get_rect()
-        self.rect.centerx = old_rect.centerx
-        self.rect.centery = old_rect.centery
-        self.start_boom = True
+        self.level = level
+        self.throw_timer = 0
+        self.throw_interval = 10000
 
-    def animation(self):
-        if self.start_boom:
-            if self.bomb_timer == 0:
-                self.bomb_timer = self.current_time
-            elif(self.current_time - self.bomb_timer) > 500:
-                self.health = 0
-        else:
-            if (self.current_time - self.animate_timer) > 100:
-                self.frame_index += 1
-                if self.frame_index >= self.frame_num:
-                    self.setBoom()
-                    return
-                self.animate_timer = self.current_time
-            
-            self.image = self.frames[self.frame_index]
+    def attacking(self):
+        interval = self.throw_interval / self.fire_rate_multiplier
+        if (self.current_time - self.throw_timer) > interval:
+            fire = MolotovFire(self.rect.centerx + c.GRID_X_SIZE, self.rect.bottom,
+                               self.current_time)
+            self.level.addBurnArea(fire)
+            self.throw_timer = self.current_time
+
+
+class MolotovFire(pg.sprite.Sprite):
+    """Invisible burning zone that damages zombies over time."""
+    def __init__(self, centerx, bottom, start_time):
+        pg.sprite.Sprite.__init__(self)
+        width = c.GRID_X_SIZE * 3
+        height = c.GRID_Y_SIZE * 3
+        self.rect = pg.Rect(0, 0, width, height)
+        self.rect.centerx = centerx
+        self.rect.bottom = bottom + c.GRID_Y_SIZE
+        self.start_time = start_time
+        self.damage_timer = start_time
+
+    def update(self, game_info, zombie_groups):
+        current_time = game_info[c.CURRENT_TIME]
+        if current_time - self.start_time > 6000:
+            self.kill()
+            return
+        if current_time - self.damage_timer >= 1000:
+            for group in zombie_groups:
+                for zombie in group:
+                    if self.rect.colliderect(zombie.rect):
+                        zombie.setDamage(1)
+            self.damage_timer = current_time
 
 class Chomper(Plant):
     def __init__(self, x, y):
@@ -450,35 +479,18 @@ class Chomper(Plant):
 
 class PuffShroom(Plant):
     def __init__(self, x, y, bullet_group):
-        Plant.__init__(self, x, y, c.PUFFSHROOM, c.PLANT_HEALTH, bullet_group)
-        self.can_sleep = True
-        self.shoot_timer = 0
+        Plant.__init__(self, x, y, c.PUFFSHROOM, c.PLANT_HEALTH, None)
+        self.can_sleep = False
 
     def loadImages(self, name, scale):
         self.idle_frames = []
-        self.sleep_frames = []
-
-        idle_name = name
-        sleep_name = name + 'Sleep'
-        
-        frame_list = [self.idle_frames, self.sleep_frames]
-        name_list = [idle_name, sleep_name]
-
-        for i, name in enumerate(name_list):
-            self.loadFrames(frame_list[i], name, 1)
-
+        self.loadFrames(self.idle_frames, name, 1)
         self.frames = self.idle_frames
 
     def attacking(self):
-        if (self.current_time - self.shoot_timer) > 3000:
-            self.bullet_group.add(Bullet(self.rect.right, self.rect.y + 10, self.rect.y + 10,
-                                    c.BULLET_MUSHROOM, c.BULLET_DAMAGE_NORMAL, True))
-            self.shoot_timer = self.current_time
+        pass
 
     def canAttack(self, zombie):
-        if (self.rect.x <= zombie.rect.right and
-            (self.rect.right + c.GRID_X_SIZE * 4 >= zombie.rect.x)):
-            return True
         return False
 
 class PotatoMine(Plant):
