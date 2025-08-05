@@ -207,7 +207,6 @@ class Level(tool.State):
             new_plant = plant.MolotovStudent(x, y, self)
         elif self.plant_name == c.KPOPIDOL:
             new_plant = plant.KPopIdol(x, y)
-        
         self.plant_groups[map_y].add(new_plant)
         if self.bar_type == c.CHOOSEBAR_STATIC:
             self.menubar.decreaseSunValue(self.select_plant.sun_cost)
@@ -319,6 +318,32 @@ class Level(tool.State):
                     if abs(other_x - idol_x) <= 2 and abs(i - row) <= 2:
                         other.fire_rate_multiplier *= 1.2
                         if other.name == c.EOMUKVENDOR:
+                            other.sun_multiplier *= 1.1
+
+    def addBurnArea(self, fire):
+        self.fire_group.add(fire)
+
+    def applyIdolBuffs(self):
+        # reset multipliers
+        for i in range(self.map_y_len):
+            for p in self.plant_groups[i]:
+                p.fire_rate_multiplier = 1
+                p.sun_multiplier = 1
+
+        idols = []
+        for i in range(self.map_y_len):
+            for p in self.plant_groups[i]:
+                if p.name == c.PUFFSHROOM:
+                    idols.append((p, i))
+
+        for idol, row in idols:
+            idol_x, idol_y = self.map.getMapIndex(idol.rect.centerx, idol.rect.bottom)
+            for i in range(max(0, row-2), min(self.map_y_len, row+3)):
+                for other in self.plant_groups[i]:
+                    other_x, _ = self.map.getMapIndex(other.rect.centerx, other.rect.bottom)
+                    if abs(other_x - idol_x) <= 2 and abs(i - row) <= 2:
+                        other.fire_rate_multiplier *= 1.2
+                        if other.name == c.SUNFLOWER:
                             other.sun_multiplier *= 1.1
 
     def killPlant(self, plant):

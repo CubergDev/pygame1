@@ -217,7 +217,6 @@ class EomukVendor(Plant):
         self.sun_timer = 0
         self.sun_group = sun_group
         self.sun_interval = c.FLOWER_SUN_INTERVAL
-
     def idling(self):
         interval = self.sun_interval / self.sun_multiplier
         if self.sun_timer == 0:
@@ -225,6 +224,7 @@ class EomukVendor(Plant):
         elif (self.current_time - self.sun_timer) > interval:
             self.sun_group.add(Sun(self.rect.centerx, self.rect.bottom, self.rect.right, self.rect.bottom + self.rect.h // 2))
             self.sun_timer = self.current_time
+
 
 class SojuBottleSlingshot(Plant):
     def __init__(self, x, y, bullet_group):
@@ -237,6 +237,7 @@ class SojuBottleSlingshot(Plant):
         if (self.current_time - self.shoot_timer) > interval:
             self.bullet_group.add(Bullet(self.rect.right, self.rect.y, self.rect.y, c.BULLET_PEA, c.BULLET_DAMAGE_NORMAL))
             self.shoot_timer = self.current_time
+
 
 class TaekwondoGuard(Plant):
     def __init__(self, x, y):
@@ -289,6 +290,7 @@ class SuitcaseBarricade(Plant):
         elif not self.cracked2 and self.health <= c.SUITCASEBARRICADE_CRACKED2_HEALTH:
             self.changeFrames(self.cracked2_frames)
             self.cracked2 = True
+
 
 class MolotovStudent(Plant):
     def __init__(self, x, y, level):

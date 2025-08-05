@@ -3,6 +3,7 @@
 This project loads most of its visuals from the `resources/graphics` folder and can be extended with sound and music through `pygame.mixer`.  The following sections describe how to replace common game assets.
 
 ## Plant sprites
+
 1. Each plant has a sub‑folder under `resources/graphics/Plants/` (for example, `SojuBottleSlingshot`, `SuitcaseBarricade`, `EomukVendor`).
 2. Inside each folder, animation frames are named `<PlantName>_0.png`, `<PlantName>_1.png`, etc.  Replace these files with your own PNGs while keeping the same naming scheme.
 3. If you add or remove frames, update the `plant.json` rectangle definitions in `source/data/entity/plant.json` to match the new frame sizes.
