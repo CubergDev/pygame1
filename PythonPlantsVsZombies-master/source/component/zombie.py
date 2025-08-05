@@ -1,4 +1,4 @@
-__author__ = 'marble_xu'
+__author__ = 'from cuberg with love'
 
 import pygame as pg
 from .. import tool
@@ -36,7 +36,6 @@ class Zombie(pg.sprite.Sprite):
         self.hit_timer = 0
         self.speed = 1
         self.freeze_timer = 0
-        self.is_hypno = False # the zombie is hypo and attack other zombies when it ate a HypnoShroom
     
     def loadFrames(self, frames, name, image_x, colorkey=c.BLACK):
         frame_list = tool.GFX[name]
@@ -77,10 +76,7 @@ class Zombie(pg.sprite.Sprite):
 
         if (self.current_time - self.walk_timer) > (c.ZOMBIE_WALK_INTERVAL * self.getTimeRatio()):
             self.walk_timer = self.current_time
-            if self.is_hypno:
-                self.rect.x += self.speed
-            else:
-                self.rect.x -= self.speed
+            self.rect.x -= self.speed
     
     def attacking(self):
         if self.health <= 0:
@@ -151,8 +147,6 @@ class Zombie(pg.sprite.Sprite):
             self.animate_timer = self.current_time
 
         self.image = self.frames[self.frame_index]
-        if self.is_hypno:
-            self.image = pg.transform.flip(self.image, True, False)
         if(self.current_time - self.hit_timer) >= 200:
             self.image.set_alpha(255)
         else:
@@ -220,14 +214,6 @@ class Zombie(pg.sprite.Sprite):
         self.ice_trap_rect = ice_trap_image.get_rect()
         self.ice_trap_rect.centerx = self.rect.centerx
         self.ice_trap_rect.bottom = self.rect.bottom
-
-    def drawFreezeTrap(self, surface):
-        if self.state == c.FREEZE:
-            surface.blit(self.ice_trap_image, self.ice_trap_rect)
-
-    def setHypno(self):
-        self.is_hypno = True
-        self.setWalk()
 
 class ZombieHead(Zombie):
     def __init__(self, x, y):
