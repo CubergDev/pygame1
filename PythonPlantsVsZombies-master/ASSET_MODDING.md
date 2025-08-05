@@ -38,6 +38,12 @@ This project loads most of its visuals from the `resources/graphics` folder and 
    pg.mixer.music.play(-1)
    ```
 
+## Aura and burn effects
+1. Aura visuals such as the KPopIdol glow can be supplied in `resources/graphics/Effects/Aura/` as `Aura_0.png`, `Aura_1.png`, and so on.  Any folder placed under `resources/graphics/Effects/` is auto‑loaded by `tool.GFX`.
+2. Adjust the aura's radius or buff values by editing `applyIdolBuffs` in `source/state/level.py`.
+3. MolotovStudent's burning zone is driven by the `MolotovFire` class in `source/component/plant.py`.  Replace its visuals by adding flame frames under `resources/graphics/Effects/Fire/` and loading them inside that class.
+4. The burn duration and damage tick (default 6 s at 1 dps) can also be tweaked in `MolotovFire.update`.
+
 ## General tips
 - Maintain the original filenames when replacing assets to avoid editing code.
 - PNG images should preserve transparency and match the expected dimensions to prevent misalignment.
