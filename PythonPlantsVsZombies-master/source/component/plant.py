@@ -32,7 +32,7 @@ class Car(pg.sprite.Sprite):
         surface.blit(self.image, self.rect)
 
 class Bullet(pg.sprite.Sprite):
-    def __init__(self, x, start_y, dest_y, name, damage):
+    def __init__(self, x, start_y, dest_y, name, damage, ice=False):
         super().__init__()
         self.name = name
         self.frames = []
@@ -46,6 +46,8 @@ class Bullet(pg.sprite.Sprite):
         self.y_vel = 4 if (dest_y > start_y) else -4
         self.x_vel = 4
         self.damage = damage
+        self.ice = ice
+        self.radius = self.rect.w // 2
         self.state = c.FLY
         self.current_time = 0
 
@@ -256,7 +258,8 @@ class SojuBottleSlingshot(Plant):
     def attacking(self):
         interval = self.shoot_interval / self.fire_rate_multiplier
         if (self.current_time - self.shoot_timer) > interval:
-            self.bullet_group.add(Bullet(self.rect.right, self.rect.y, self.rect.y, c.BULLET_PEA, c.BULLET_DAMAGE_NORMAL))
+            self.bullet_group.add(Bullet(self.rect.right, self.rect.y, self.rect.y,
+                                         c.BULLET_PEA, c.BULLET_DAMAGE_NORMAL, ice=True))
             self.play_sound()
             self.shoot_timer = self.current_time
 
@@ -350,8 +353,8 @@ class MolotovStudent(Plant):
         super().__init__(x, y, c.MOLOTOVSTUDENT, c.PLANT_HEALTH, level.bullet_groups[map_y])
         self.state = c.ATTACK
         self.level = level
-        self.throw_timer = 0
         self.throw_interval = 10000
+        self.throw_timer = -self.throw_interval
 
     def attacking(self):
         interval = self.throw_interval / self.fire_rate_multiplier

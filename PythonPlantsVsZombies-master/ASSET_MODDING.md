@@ -1,30 +1,89 @@
 # Asset Replacement Pipeline
 
 This guide walks through swapping the bundled art and audio with your own
-creations.  Each section lists required formats, file names and, for
-animations, the poses and frame counts the engine expects.
+
+creations. Every asset lives under `resources/` and is loaded purely by
+its filename, so replacing a file with one that uses the exact same name
+is enough for the game to pick it up. The sections below list the folders,
+exact file names, expected frame counts and optional sounds for each
+defender plus the surrounding UI.
 
 ## Defenders
 
-1. Prepare PNG frames for the defender's animation.
-2. Drop them into `resources/graphics/Plants/<Folder>/` using the naming
-   `<Folder>_0.png`, `<Folder>_1.png`, ...
-3. If you change frame sizes or counts, update the rectangle data in
-   `source/data/entity/plant.json`.
-4. Optionally place `resources/sounds/<Hero>_deploy.ogg` and
-   `resources/sounds/<Hero>_death.ogg` and load them in `source/tool.py`.
+For every defender place PNG frames in the folders listed below. Filenames
+must be zero‑indexed and consecutive (`Foo_0.png`, `Foo_1.png`, …). The
+engine uses whatever size you supply, but if you change dimensions or
+frame counts update the matching rectangle entry in
+`source/data/entity/plant.json`.
 
-| Hero                | Asset folder(s)                                      | Frames | Poses                     |
-|---------------------|------------------------------------------------------|-------:|---------------------------|
-| SojuBottleSlingshot | `Peashooter`                                         |   13   | idle + shot               |
-| EomukVendor         | `SunFlower`                                          |   18   | idle loop                 |
-| SuitcaseBarricade   | `WallNut`, `WallNut_cracked1`, `WallNut_cracked2`    |   16   | intact and two cracked    |
-| TaekwondoGuard      | `RepeaterPea`                                        |   15   | idle + shot               |
-| MolotovStudent      | `CherryBomb`                                         |    7   | fuse to explosion         |
-| KPopIdol            | `PuffShroom`, `PuffShroomSleep`                      | 14/17  | active loop / sleep       |
+### SojuBottleSlingshot (Peashooter)
+* **Sprite folder:** `resources/graphics/Plants/Peashooter/`
+* **Frames:** 13 files `Peashooter_0.png` … `Peashooter_12.png`
+* **Card art:** `resources/graphics/Cards/card_peashooter.png` and
+  `card_peashooter_move.png`
+* **Bullet:** replace `resources/graphics/Bullets/PeaNormal/PeaNormal_0.png`
+  and `resources/graphics/Bullets/PeaNormalExplode/PeaNormalExplode_0.png`
+* **Optional sounds:** `resources/sounds/SojuBottleSlingshot_deploy.ogg` and
+  `SojuBottleSlingshot_death.ogg`
 
-Cards that appear on the menubar live in `resources/graphics/Cards/` and
-use the same PNG format.
+### EomukVendor (SunFlower)
+* **Sprite folder:** `resources/graphics/Plants/SunFlower/`
+* **Frames:** 18 files `SunFlower_0.png` … `SunFlower_17.png`
+* **Card art:** `resources/graphics/Cards/card_sunflower.png` and
+  `card_sunflower_move.png`
+* **Optional sounds:** `resources/sounds/EomukVendor_deploy.ogg` and
+  `EomukVendor_death.ogg`
+
+### SuitcaseBarricade (WallNut)
+* **Sprite folders:**
+  * `resources/graphics/Plants/WallNut/WallNut/` – 16 files
+    `WallNut_0.png` … `WallNut_15.png` (intact)
+  * `resources/graphics/Plants/WallNut/WallNut_cracked1/` – 11 files
+    `WallNut_cracked1_0.png` … `WallNut_cracked1_10.png`
+  * `resources/graphics/Plants/WallNut/WallNut_cracked2/` – 15 files
+    `WallNut_cracked2_0.png` … `WallNut_cracked2_14.png`
+* **Card art:** `resources/graphics/Cards/card_wallnut.png` and
+  `card_wallnut_move.png`
+* **Optional sounds:** `resources/sounds/SuitcaseBarricade_deploy.ogg` and
+  `SuitcaseBarricade_death.ogg`
+
+### TaekwondoGuard (RepeaterPea)
+* **Sprite folder:** `resources/graphics/Plants/RepeaterPea/`
+* **Frames:** 15 files `RepeaterPea_0.png` … `RepeaterPea_14.png`
+* **Card art:** `resources/graphics/Cards/card_repeaterpea.png` and
+  `card_repeaterpea_move.png`
+* **Bullet:** uses the same pea assets as SojuBottleSlingshot
+* **Optional sounds:** `resources/sounds/TaekwondoGuard_deploy.ogg` and
+  `TaekwondoGuard_death.ogg`
+
+### MolotovStudent (CherryBomb)
+* **Sprite folder:** `resources/graphics/Plants/CherryBomb/`
+* **Frames:** 7 files `CherryBomb_0.png` … `CherryBomb_6.png`
+* **Card art:** `resources/graphics/Cards/card_cherrybomb.png` and
+  `card_cherrybomb_move.png`
+* **Burn effect:** supply frames in
+  `resources/graphics/Effects/MolotovFire/MolotovFire_0.png`,
+  `MolotovFire_1.png`, … as desired
+* **Optional sounds:** `resources/sounds/MolotovStudent_deploy.ogg` and
+  `MolotovStudent_death.ogg`
+
+### KPopIdol (PuffShroom)
+* **Sprite folders:**
+  * Active: `resources/graphics/Plants/PuffShroom/PuffShroom/` – 14 files
+    `PuffShroom_0.png` … `PuffShroom_13.png`
+  * Sleeping: `resources/graphics/Plants/PuffShroom/PuffShroomSleep/` – 17
+    files `PuffShroomSleep_0.png` … `PuffShroomSleep_16.png`
+* **Card art:** `resources/graphics/Cards/card_puffshroom.png` and
+  `card_puffshroom_move.png`
+* **Aura effect:** optional frames in
+  `resources/graphics/Effects/KPopAura/KPopAura_0.png`, …
+* **Optional sounds:** `resources/sounds/KPopIdol_deploy.ogg` and
+  `KPopIdol_death.ogg`
+
+Cards for all defenders must remain in `resources/graphics/Cards/` and keep
+their original `card_<plant>.png` and `card_<plant>_move.png` names so the
+menubar finds them.
+
 
 ## Start menu
 
