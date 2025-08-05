@@ -1,10 +1,13 @@
 __author__ = 'from cuberg with love'
 
+import os
 import pygame as pg
 from .. import tool
 from .. import constants as c
 
 class Zombie(pg.sprite.Sprite):
+    attack_sound = None
+
     def __init__(self, x, y, name, health, head_group=None, damage=1):
         pg.sprite.Sprite.__init__(self)
         
@@ -36,6 +39,11 @@ class Zombie(pg.sprite.Sprite):
         self.hit_timer = 0
         self.speed = 1
         self.freeze_timer = 0
+
+        if Zombie.attack_sound is None:
+            sound_path = os.path.join("resources", "sound", "zombie.wav")
+            if os.path.exists(sound_path):
+                Zombie.attack_sound = pg.mixer.Sound(sound_path)
     
     def loadFrames(self, frames, name, image_x, colorkey=c.BLACK):
         frame_list = tool.GFX[name]
@@ -93,6 +101,8 @@ class Zombie(pg.sprite.Sprite):
                     self.prey.setDamage(self.damage, self)
                 else:
                     self.prey.setDamage(self.damage)
+            if Zombie.attack_sound:
+                Zombie.attack_sound.play()
             self.attack_timer = self.current_time
 
         if self.prey.health <= 0:

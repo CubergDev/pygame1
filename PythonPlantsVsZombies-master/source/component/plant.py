@@ -1,5 +1,6 @@
 __author__ = 'from cuberg with love'
 
+import os
 import pygame as pg
 from .. import tool
 from .. import constants as c
@@ -112,6 +113,9 @@ class Plant(pg.sprite.Sprite):
         self.fire_rate_multiplier = 1
         self.sun_multiplier = 1
 
+        sound_path = os.path.join("resources", "sound", f"{name}.wav")
+        self.sound = pg.mixer.Sound(sound_path) if os.path.exists(sound_path) else None
+
     def loadFrames(self, frames, name, scale, color=c.BLACK):
         frame_list = tool.GFX[name]
         if name in tool.PLANT_RECT:
@@ -166,6 +170,10 @@ class Plant(pg.sprite.Sprite):
             self.image.set_alpha(255)
         else:
             self.image.set_alpha(192)
+
+    def play_sound(self):
+        if self.sound:
+            self.sound.play()
 
     def canAttack(self, zombie):
         if self.state != c.SLEEP and zombie.state != c.DIE and self.rect.x <= zombie.rect.right:
@@ -223,6 +231,7 @@ class EomukVendor(Plant):
             self.sun_timer = self.current_time - (interval - 6000)
         elif (self.current_time - self.sun_timer) > interval:
             self.sun_group.add(Sun(self.rect.centerx, self.rect.bottom, self.rect.right, self.rect.bottom + self.rect.h // 2))
+            self.play_sound()
             self.sun_timer = self.current_time
 
 
@@ -236,6 +245,7 @@ class SojuBottleSlingshot(Plant):
         interval = self.shoot_interval / self.fire_rate_multiplier
         if (self.current_time - self.shoot_timer) > interval:
             self.bullet_group.add(Bullet(self.rect.right, self.rect.y, self.rect.y, c.BULLET_PEA, c.BULLET_DAMAGE_NORMAL))
+            self.play_sound()
             self.shoot_timer = self.current_time
 
 
@@ -262,6 +272,7 @@ class TaekwondoGuard(Plant):
         if (self.current_time - self.attack_timer) > interval:
             self.attack_zombie.setDamage(2)
             self.attack_zombie.rect.x += c.GRID_X_SIZE
+            self.play_sound()
             self.attack_timer = self.current_time
 
     def setIdle(self):
@@ -305,6 +316,7 @@ class MolotovStudent(Plant):
         if (self.current_time - self.throw_timer) > interval:
             fire = MolotovFire(self.rect.centerx + c.GRID_X_SIZE, self.rect.bottom, self.current_time)
             self.level.addBurnArea(fire)
+            self.play_sound()
             self.throw_timer = self.current_time
 
 class MolotovFire(pg.sprite.Sprite):
