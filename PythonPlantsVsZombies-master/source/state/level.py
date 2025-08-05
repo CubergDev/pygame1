@@ -47,6 +47,7 @@ class Level(tool.State):
         self.zombie_groups = []
         self.hypno_zombie_groups = [] #zombies who are hypno after eating hypnoshroom
         self.bullet_groups = []
+        self.fire_group = pg.sprite.Group()
         for i in range(self.map_y_len):
             self.plant_groups.append(pg.sprite.Group())
             self.zombie_groups.append(pg.sprite.Group())
@@ -128,6 +129,7 @@ class Level(tool.State):
             if  data[0] <= (self.current_time - self.zombie_start_time):
                 self.createZombie(data[1], data[2])
                 self.zombie_list.remove(data)
+        self.applyIdolBuffs()
 
         for i in range(self.map_y_len):
             self.bullet_groups[i].update(self.game_info)
@@ -138,6 +140,7 @@ class Level(tool.State):
                 if zombie.rect.x > c.SCREEN_WIDTH:
                     zombie.kill()
 
+        self.fire_group.update(self.game_info, self.zombie_groups)
         self.head_group.update(self.game_info)
         self.sun_group.update(self.game_info)
         
@@ -213,7 +216,7 @@ class Level(tool.State):
         elif self.plant_name == c.WALLNUT:
             new_plant = plant.WallNut(x, y)
         elif self.plant_name == c.CHERRYBOMB:
-            new_plant = plant.CherryBomb(x, y)
+            new_plant = plant.CherryBomb(x, y, self)
         elif self.plant_name == c.THREEPEASHOOTER:
             new_plant = plant.ThreePeaShooter(x, y, self.bullet_groups, map_y)
         elif self.plant_name == c.REPEATERPEA:
@@ -221,7 +224,7 @@ class Level(tool.State):
         elif self.plant_name == c.CHOMPER:
             new_plant = plant.Chomper(x, y)
         elif self.plant_name == c.PUFFSHROOM:
-            new_plant = plant.PuffShroom(x, y, self.bullet_groups[map_y])
+            new_plant = plant.PuffShroom(x, y, None)
         elif self.plant_name == c.POTATOMINE:
             new_plant = plant.PotatoMine(x, y)
         elif self.plant_name == c.SQUASH:
@@ -379,12 +382,38 @@ class Level(tool.State):
                 if zombie.rect.centerx < c.SCREEN_WIDTH:
                     zombie.setFreeze(plant.trap_frames[0])
 
+    def addBurnArea(self, fire):
+        self.fire_group.add(fire)
+
+    def applyIdolBuffs(self):
+        # reset multipliers
+        for i in range(self.map_y_len):
+            for p in self.plant_groups[i]:
+                p.fire_rate_multiplier = 1
+                p.sun_multiplier = 1
+
+        idols = []
+        for i in range(self.map_y_len):
+            for p in self.plant_groups[i]:
+                if p.name == c.PUFFSHROOM:
+                    idols.append((p, i))
+
+        for idol, row in idols:
+            idol_x, idol_y = self.map.getMapIndex(idol.rect.centerx, idol.rect.bottom)
+            for i in range(max(0, row-2), min(self.map_y_len, row+3)):
+                for other in self.plant_groups[i]:
+                    other_x, _ = self.map.getMapIndex(other.rect.centerx, other.rect.bottom)
+                    if abs(other_x - idol_x) <= 2 and abs(i - row) <= 2:
+                        other.fire_rate_multiplier *= 1.2
+                        if other.name == c.SUNFLOWER:
+                            other.sun_multiplier *= 1.1
+
     def killPlant(self, plant):
         x, y = plant.getPosition()
         map_x, map_y = self.map.getMapIndex(x, y)
         if self.bar_type != c.CHOSSEBAR_BOWLING:
             self.map.setMapGridType(map_x, map_y, c.MAP_EMPTY)
-        if (plant.name == c.CHERRYBOMB or plant.name == c.JALAPENO or
+        if (plant.name == c.JALAPENO or
             (plant.name == c.POTATOMINE and not plant.is_init) or
             plant.name == c.REDWALLNUTBOWLING):
             self.boomZombies(plant.rect.centerx, map_y, plant.explode_y_range,
@@ -428,6 +457,16 @@ class Level(tool.State):
                 if plant.canAttack(zombie):
                     plant.setAttack()
                     break
+        elif plant.name == c.REPEATERPEA:
+            if plant.state == c.IDLE:
+                for zombie in self.zombie_groups[i]:
+                    if plant.canAttack(zombie):
+                        plant.setAttack(zombie)
+                        break
+            elif plant.state == c.ATTACK:
+                if (plant.attack_zombie is None or
+                    not plant.canAttack(plant.attack_zombie)):
+                    plant.setIdle()
         elif plant.name == c.SQUASH:
             for zombie in self.zombie_groups[i]:
                 if plant.canAttack(zombie):
@@ -460,6 +499,8 @@ class Level(tool.State):
                     plant.setAttack()
             elif plant.state != c.IDLE:
                 plant.setIdle()
+        elif plant.name == c.CHERRYBOMB:
+            pass
         elif(plant.name == c.WALLNUTBOWLING or
              plant.name == c.REDWALLNUTBOWLING):
             pass
