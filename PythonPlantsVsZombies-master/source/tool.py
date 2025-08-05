@@ -58,7 +58,7 @@ class Control():
         self.mouse_click[1] = False
 
     def flip_state(self):
-        previous, self.state_name = self.state_name, self.state.next
+        self.state_name = self.state.next
         persist = self.state.cleanup()
         self.state = self.state_dict[self.state_name]
         self.state.startup(self.current_time, persist)
