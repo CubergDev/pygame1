@@ -81,6 +81,7 @@ TAEKWONDOGUARD = 'RepeaterPea'
 MOLOTOVSTUDENT = 'CherryBomb'
 KPOPIDOL = 'PuffShroom'
 
+# Legacy alias for compatibility
 PUFFSHROOM = KPOPIDOL
 
 
@@ -107,6 +108,7 @@ CARD_TAEKWONDOGUARD = 'card_repeaterpea'
 CARD_MOLOTOVSTUDENT = 'card_cherrybomb'
 CARD_KPOPIDOL = 'card_puffshroom'
 
+# Legacy card alias
 CARD_PUFFSHROOM = CARD_KPOPIDOL
 
 

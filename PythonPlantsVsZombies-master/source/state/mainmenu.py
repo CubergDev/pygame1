@@ -28,8 +28,14 @@ class Menu(tool.State):
         frame_names = [c.OPTION_ADVENTURE + '_0', c.OPTION_ADVENTURE + '_1']
         frame_rect = [0, 0, 165, 77]
         
+        font = pg.font.Font(None, 40)
+        text = font.render('게임 시작', True, c.WHITE)
+        text_rect = text.get_rect()
         for name in frame_names:
-            self.option_frames.append(tool.get_image(tool.GFX[name], *frame_rect, c.BLACK, 1.7))
+            frame = tool.get_image(tool.GFX[name], *frame_rect, c.BLACK, 1.7)
+            frame.blit(text, ((frame.get_width() - text_rect.width) // 2,
+                              (frame.get_height() - text_rect.height) // 2))
+            self.option_frames.append(frame)
         
         self.option_frame_index = 0
         self.option_image = self.option_frames[self.option_frame_index]

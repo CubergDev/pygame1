@@ -104,6 +104,7 @@ class Plant(pg.sprite.Sprite):
         self.rect.bottom = y
         self.name = name
         self.health = health
+        self.max_health = health
         self.state = c.IDLE
         self.bullet_group = bullet_group
         self.can_sleep = False
@@ -192,6 +193,17 @@ class Plant(pg.sprite.Sprite):
 
     def getPosition(self):
         return self.rect.centerx, self.rect.bottom
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+        if self.max_health > 0:
+            bar_width = self.rect.w
+            bar_height = 4
+            bar_x = self.rect.x
+            bar_y = self.rect.y - bar_height - 2
+            pg.draw.rect(surface, c.RED, (bar_x, bar_y, bar_width, bar_height))
+            ratio = max(self.health, 0) / self.max_health
+            pg.draw.rect(surface, c.GREEN, (bar_x, bar_y, int(bar_width * ratio), bar_height))
 
 class Sun(Plant):
     def __init__(self, x, y, dest_x, dest_y):
@@ -303,9 +315,39 @@ class SuitcaseBarricade(Plant):
             self.cracked2 = True
 
 
+class MolotovProjectile(pg.sprite.Sprite):
+    def __init__(self, centerx, bottom, level):
+        super().__init__()
+        self.image = pg.Surface((20, 20), pg.SRCALPHA)
+        pg.draw.circle(self.image, (255, 120, 0), (10, 10), 10)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = centerx
+        self.rect.bottom = bottom
+        self.level = level
+        self.x_vel = 4
+        self.state = c.FLY
+        self.current_time = 0
+        self.radius = 10
+
+    def update(self, game_info):
+        self.current_time = game_info[c.CURRENT_TIME]
+        if self.state == c.FLY:
+            self.rect.x += self.x_vel
+            if self.rect.x > c.SCREEN_WIDTH:
+                self.kill()
+
+    def on_hit(self):
+        fire = MolotovFire(self.rect.centerx, self.rect.bottom, self.current_time)
+        self.level.addBurnArea(fire)
+        self.kill()
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
 class MolotovStudent(Plant):
     def __init__(self, x, y, level):
-        super().__init__(x, y, c.MOLOTOVSTUDENT, c.PLANT_HEALTH, None)
+        _, map_y = level.map.getMapIndex(x, y)
+        super().__init__(x, y, c.MOLOTOVSTUDENT, c.PLANT_HEALTH, level.bullet_groups[map_y])
         self.state = c.ATTACK
         self.level = level
         self.throw_timer = 0
@@ -314,8 +356,8 @@ class MolotovStudent(Plant):
     def attacking(self):
         interval = self.throw_interval / self.fire_rate_multiplier
         if (self.current_time - self.throw_timer) > interval:
-            fire = MolotovFire(self.rect.centerx + c.GRID_X_SIZE, self.rect.bottom, self.current_time)
-            self.level.addBurnArea(fire)
+            bottle = MolotovProjectile(self.rect.centerx, self.rect.bottom, self.level)
+            self.bullet_group.add(bottle)
             self.play_sound()
             self.throw_timer = self.current_time
 
@@ -324,7 +366,9 @@ class MolotovFire(pg.sprite.Sprite):
         super().__init__()
         width = c.GRID_X_SIZE * 3
         height = c.GRID_Y_SIZE * 3
-        self.rect = pg.Rect(0, 0, width, height)
+        self.image = pg.Surface((width, height), pg.SRCALPHA)
+        self.image.fill((255, 80, 0, 100))
+        self.rect = self.image.get_rect()
         self.rect.centerx = centerx
         self.rect.bottom = bottom + c.GRID_Y_SIZE
         self.start_time = start_time
@@ -345,4 +389,13 @@ class MolotovFire(pg.sprite.Sprite):
 class KPopIdol(Plant):
     def __init__(self, x, y):
         super().__init__(x, y, c.KPOPIDOL, c.PLANT_HEALTH, None)
+        radius = c.GRID_X_SIZE * 2
+        self.aura_image = pg.Surface((radius * 2, radius * 2), pg.SRCALPHA)
+        pg.draw.circle(self.aura_image, (255, 192, 203, 80), (radius, radius), radius)
+
+    def draw(self, surface):
+        aura_rect = self.aura_image.get_rect()
+        aura_rect.center = self.rect.center
+        surface.blit(self.aura_image, aura_rect)
+        super().draw(surface)
 

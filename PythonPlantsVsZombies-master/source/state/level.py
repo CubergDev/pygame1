@@ -269,8 +269,11 @@ class Level(tool.State):
                 if bullet.state == c.FLY:
                     zombie = pg.sprite.spritecollideany(bullet, self.zombie_groups[i], collided_func)
                     if zombie and zombie.state != c.DIE:
-                        zombie.setDamage(bullet.damage, bullet.ice)
-                        bullet.setExplode()
+                        if isinstance(bullet, plant.MolotovProjectile):
+                            bullet.on_hit()
+                        else:
+                            zombie.setDamage(bullet.damage, bullet.ice)
+                            bullet.setExplode()
     
     def checkZombieCollisions(self):
         collided_func = pg.sprite.collide_circle_ratio(0.7)
@@ -395,9 +398,13 @@ class Level(tool.State):
         elif self.state == c.PLAY:
             self.menubar.draw(surface)
             for i in range(self.map_y_len):
-                self.plant_groups[i].draw(surface)
-                self.zombie_groups[i].draw(surface)
-                self.bullet_groups[i].draw(surface)
+                for p in self.plant_groups[i]:
+                    p.draw(surface)
+                for z in self.zombie_groups[i]:
+                    z.draw(surface)
+                for b in self.bullet_groups[i]:
+                    b.draw(surface)
+            self.fire_group.draw(surface)
             for car in self.cars:
                 car.draw(surface)
             self.head_group.draw(surface)
