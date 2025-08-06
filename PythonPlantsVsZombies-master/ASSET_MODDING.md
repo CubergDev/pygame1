@@ -1,6 +1,7 @@
 # Asset Replacement Pipeline
 
 This guide walks through swapping the bundled art and audio with your own
+
 creations. Every asset lives under `resources/` and is loaded purely by
 its filename, so replacing a file with one that uses the exact same name
 is enough for the game to pick it up. The sections below list the folders,
@@ -60,9 +61,11 @@ frame counts update the matching rectangle entry in
 * **Frames:** 7 files `CherryBomb_0.png` … `CherryBomb_6.png`
 * **Card art:** `resources/graphics/Cards/card_cherrybomb.png` and
   `card_cherrybomb_move.png`
+
 * **Projectile:** optional frames in
   `resources/graphics/Effects/MolotovProjectile/MolotovProjectile_0.png`,
   `MolotovProjectile_1.png`, …
+
 * **Burn effect:** supply frames in
   `resources/graphics/Effects/MolotovFire/MolotovFire_0.png`,
   `MolotovFire_1.png`, … as desired
@@ -85,6 +88,7 @@ frame counts update the matching rectangle entry in
 Cards for all defenders must remain in `resources/graphics/Cards/` and keep
 their original `card_<plant>.png` and `card_<plant>_move.png` names so the
 menubar finds them.
+
 
 ## Start menu
 
