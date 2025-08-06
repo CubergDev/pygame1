@@ -286,7 +286,10 @@ class TaekwondoGuard(Plant):
         interval = self.attack_interval / self.fire_rate_multiplier
         if (self.current_time - self.attack_timer) > interval:
             self.attack_zombie.setDamage(2)
-            self.attack_zombie.rect.x += c.GRID_X_SIZE
+            overlap = self.rect.right - self.attack_zombie.rect.left
+            push = overlap + c.GRID_X_SIZE
+            self.attack_zombie.rect.x += push
+            self.attack_zombie.setWalk()
             self.play_sound()
             self.attack_timer = self.current_time
 
@@ -405,7 +408,6 @@ class MolotovFire(pg.sprite.Sprite):
         else:
             self.image = pg.Surface((width, height), pg.SRCALPHA)
             self.image.fill((255, 80, 0, 100))
-
         self.rect = self.image.get_rect()
         self.rect.centerx = centerx
         self.rect.bottom = bottom + c.GRID_Y_SIZE
