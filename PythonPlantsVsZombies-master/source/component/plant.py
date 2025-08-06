@@ -32,7 +32,7 @@ class Car(pg.sprite.Sprite):
         surface.blit(self.image, self.rect)
 
 class Bullet(pg.sprite.Sprite):
-    def __init__(self, x, start_y, dest_y, name, damage):
+    def __init__(self, x, start_y, dest_y, name, damage, ice=False):
         super().__init__()
         self.name = name
         self.frames = []
@@ -46,6 +46,8 @@ class Bullet(pg.sprite.Sprite):
         self.y_vel = 4 if (dest_y > start_y) else -4
         self.x_vel = 4
         self.damage = damage
+        self.ice = ice
+        self.radius = self.rect.w // 2
         self.state = c.FLY
         self.current_time = 0
 
@@ -104,6 +106,7 @@ class Plant(pg.sprite.Sprite):
         self.rect.bottom = y
         self.name = name
         self.health = health
+        self.max_health = health
         self.state = c.IDLE
         self.bullet_group = bullet_group
         self.can_sleep = False
@@ -193,6 +196,17 @@ class Plant(pg.sprite.Sprite):
     def getPosition(self):
         return self.rect.centerx, self.rect.bottom
 
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+        if self.max_health > 0:
+            bar_width = self.rect.w
+            bar_height = 4
+            bar_x = self.rect.x
+            bar_y = self.rect.y - bar_height - 2
+            pg.draw.rect(surface, c.RED, (bar_x, bar_y, bar_width, bar_height))
+            ratio = max(self.health, 0) / self.max_health
+            pg.draw.rect(surface, c.GREEN, (bar_x, bar_y, int(bar_width * ratio), bar_height))
+
 class Sun(Plant):
     def __init__(self, x, y, dest_x, dest_y):
         super().__init__(x, y, c.SUN, 0, None, 0.9)
@@ -244,7 +258,8 @@ class SojuBottleSlingshot(Plant):
     def attacking(self):
         interval = self.shoot_interval / self.fire_rate_multiplier
         if (self.current_time - self.shoot_timer) > interval:
-            self.bullet_group.add(Bullet(self.rect.right, self.rect.y, self.rect.y, c.BULLET_PEA, c.BULLET_DAMAGE_NORMAL))
+            self.bullet_group.add(Bullet(self.rect.right, self.rect.y, self.rect.y,
+                                         c.BULLET_PEA, c.BULLET_DAMAGE_NORMAL, ice=True))
             self.play_sound()
             self.shoot_timer = self.current_time
 
@@ -262,7 +277,8 @@ class TaekwondoGuard(Plant):
     def setAttack(self, zombie):
         self.state = c.ATTACK
         self.attack_zombie = zombie
-        self.attack_timer = self.current_time
+        # Trigger the first kick as soon as a zombie steps into range
+        self.attack_timer = self.current_time - self.attack_interval
 
     def attacking(self):
         if (self.attack_zombie is None or self.attack_zombie.state == c.DIE or not self.canAttack(self.attack_zombie)):
@@ -271,7 +287,10 @@ class TaekwondoGuard(Plant):
         interval = self.attack_interval / self.fire_rate_multiplier
         if (self.current_time - self.attack_timer) > interval:
             self.attack_zombie.setDamage(2)
-            self.attack_zombie.rect.x += c.GRID_X_SIZE
+            overlap = self.rect.right - self.attack_zombie.rect.left
+            push = overlap + c.GRID_X_SIZE
+            self.attack_zombie.rect.x += push
+            self.attack_zombie.setWalk()
             self.play_sound()
             self.attack_timer = self.current_time
 
@@ -303,19 +322,66 @@ class SuitcaseBarricade(Plant):
             self.cracked2 = True
 
 
+class MolotovProjectile(pg.sprite.Sprite):
+    def __init__(self, centerx, bottom, level):
+        super().__init__()
+        self.frames = []
+        name = 'MolotovProjectile'
+        if name in tool.GFX:
+            for frame in tool.GFX[name]:
+                rect = frame.get_rect()
+                self.frames.append(tool.get_image(frame, 0, 0, rect.w, rect.h))
+        if self.frames:
+            self.image = self.frames[0]
+        else:
+            self.image = pg.Surface((20, 20), pg.SRCALPHA)
+            pg.draw.circle(self.image, (255, 120, 0), (10, 10), 10)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = centerx
+        self.rect.bottom = bottom
+        self.level = level
+        self.x_vel = 4
+        self.state = c.FLY
+        self.current_time = 0
+        self.radius = self.rect.w // 2
+        self.animate_timer = 0
+        self.animate_interval = 100
+        self.frame_index = 0
+
+    def update(self, game_info):
+        self.current_time = game_info[c.CURRENT_TIME]
+        if self.state == c.FLY:
+            self.rect.x += self.x_vel
+            if self.rect.x > c.SCREEN_WIDTH:
+                self.kill()
+            if self.frames and (self.current_time - self.animate_timer) > self.animate_interval:
+                self.frame_index = (self.frame_index + 1) % len(self.frames)
+                self.image = self.frames[self.frame_index]
+                self.animate_timer = self.current_time
+
+    def on_hit(self):
+        fire = MolotovFire(self.rect.centerx, self.rect.bottom, self.current_time)
+        self.level.addBurnArea(fire)
+        self.kill()
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+
 class MolotovStudent(Plant):
     def __init__(self, x, y, level):
-        super().__init__(x, y, c.MOLOTOVSTUDENT, c.PLANT_HEALTH, None)
+        _, map_y = level.map.getMapIndex(x, y)
+        super().__init__(x, y, c.MOLOTOVSTUDENT, c.PLANT_HEALTH, level.bullet_groups[map_y])
         self.state = c.ATTACK
         self.level = level
-        self.throw_timer = 0
         self.throw_interval = 10000
+        self.throw_timer = -self.throw_interval
 
     def attacking(self):
         interval = self.throw_interval / self.fire_rate_multiplier
         if (self.current_time - self.throw_timer) > interval:
-            fire = MolotovFire(self.rect.centerx + c.GRID_X_SIZE, self.rect.bottom, self.current_time)
-            self.level.addBurnArea(fire)
+            bottle = MolotovProjectile(self.rect.centerx, self.rect.bottom, self.level)
+            bottle.current_time = self.current_time
+            self.bullet_group.add(bottle)
             self.play_sound()
             self.throw_timer = self.current_time
 
@@ -324,11 +390,26 @@ class MolotovFire(pg.sprite.Sprite):
         super().__init__()
         width = c.GRID_X_SIZE * 3
         height = c.GRID_Y_SIZE * 3
-        self.rect = pg.Rect(0, 0, width, height)
+        name = 'MolotovFire'
+        self.frames = []
+        if name in tool.GFX:
+            for frame in tool.GFX[name]:
+                rect = frame.get_rect()
+                self.frames.append(tool.get_image(frame, 0, 0, rect.w, rect.h))
+        if self.frames:
+            self.image = pg.transform.scale(self.frames[0], (width, height))
+        else:
+            self.image = pg.Surface((width, height), pg.SRCALPHA)
+            self.image.fill((255, 80, 0, 100))
+        self.rect = self.image.get_rect()
         self.rect.centerx = centerx
         self.rect.bottom = bottom + c.GRID_Y_SIZE
         self.start_time = start_time
-        self.damage_timer = start_time
+        self.damage_timer = start_time - 1000
+        self.frame_index = 0
+        self.frame_num = len(self.frames)
+        self.animate_timer = start_time
+        self.animate_interval = 100
 
     def update(self, game_info, zombie_groups):
         current_time = game_info[c.CURRENT_TIME]
@@ -341,8 +422,22 @@ class MolotovFire(pg.sprite.Sprite):
                     if self.rect.colliderect(zombie.rect):
                         zombie.setDamage(1)
             self.damage_timer = current_time
+        if self.frame_num and (current_time - self.animate_timer) > self.animate_interval:
+            self.frame_index = (self.frame_index + 1) % self.frame_num
+            frame = pg.transform.scale(self.frames[self.frame_index], (self.rect.w, self.rect.h))
+            self.image = frame
+            self.animate_timer = current_time
 
 class KPopIdol(Plant):
     def __init__(self, x, y):
         super().__init__(x, y, c.KPOPIDOL, c.PLANT_HEALTH, None)
+        radius = c.GRID_X_SIZE * 2
+        self.aura_image = pg.Surface((radius * 2, radius * 2), pg.SRCALPHA)
+        pg.draw.circle(self.aura_image, (255, 192, 203, 80), (radius, radius), radius)
+
+    def draw(self, surface):
+        aura_rect = self.aura_image.get_rect()
+        aura_rect.center = self.rect.center
+        surface.blit(self.aura_image, aura_rect)
+        super().draw(surface)
 

@@ -21,8 +21,9 @@ class Zombie(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.bottom = y
-        
+
         self.health = health
+        self.max_health = health
         self.damage = damage
         self.dead = False
         self.losHead = False
@@ -224,6 +225,17 @@ class Zombie(pg.sprite.Sprite):
         self.ice_trap_rect = ice_trap_image.get_rect()
         self.ice_trap_rect.centerx = self.rect.centerx
         self.ice_trap_rect.bottom = self.rect.bottom
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
+        if self.max_health > 0:
+            bar_width = self.rect.w
+            bar_height = 4
+            bar_x = self.rect.x
+            bar_y = self.rect.y - bar_height - 2
+            pg.draw.rect(surface, c.RED, (bar_x, bar_y, bar_width, bar_height))
+            ratio = max(self.health, 0) / self.max_health
+            pg.draw.rect(surface, c.GREEN, (bar_x, bar_y, int(bar_width * ratio), bar_height))
 
 class ZombieHead(Zombie):
     def __init__(self, x, y):

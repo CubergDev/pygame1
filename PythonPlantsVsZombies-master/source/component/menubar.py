@@ -16,6 +16,9 @@ card_name_list = [c.CARD_SOJUBOTTLESLINGSHOT, c.CARD_EOMUKVENDOR, c.CARD_SUITCAS
                   c.CARD_TAEKWONDOGUARD, c.CARD_MOLOTOVSTUDENT, c.CARD_KPOPIDOL]
 plant_name_list = [c.SOJUBOTTLESLINGSHOT, c.EOMUKVENDOR, c.SUITCASEBARRICADE,
                    c.TAEKWONDOGUARD, c.MOLOTOVSTUDENT, c.KPOPIDOL]
+# Hero identifiers used in level JSON files
+hero_name_list = ['SojuBottleSlingshot', 'EomukVendor', 'SuitcaseBarricade',
+                  'TaekwondoGuard', 'MolotovStudent', 'KPopIdol']
 plant_sun_list = [100, 50, 50, 125, 150, 125]
 plant_frozen_time_list = [1400, 8000, 2000, 3000, 8000, 5000]
 all_card_list = [0, 1, 2, 3, 4, 5]
@@ -39,8 +42,8 @@ def getCardPool(data):
     card_pool = []
     for card in data:
         tmp = card['name']
-        for i,name in enumerate(plant_name_list):
-            if name == tmp:
+        for i, hero in enumerate(hero_name_list):
+            if tmp == hero or tmp == plant_name_list[i]:
                 card_pool.append(i)
                 break
     return card_pool
