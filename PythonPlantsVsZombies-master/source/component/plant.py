@@ -43,8 +43,8 @@ class Bullet(pg.sprite.Sprite):
         self.rect.x = x
         self.rect.y = start_y
         self.dest_y = dest_y
-        self.y_vel = 4 if (dest_y > start_y) else -4
-        self.x_vel = 4
+        self.y_vel = 12 if (dest_y > start_y) else -4
+        self.x_vel = 12
         self.damage = damage
         self.ice = ice
         self.radius = self.rect.w // 2
@@ -270,6 +270,7 @@ class TaekwondoGuard(Plant):
         self.attack_timer = 0
         self.attack_interval = 2000
         self.attack_zombie = None
+        self.current_time = 0
 
     def loadImages(self, name, scale):
         frames = tool.GFX[name]

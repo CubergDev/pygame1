@@ -1,7 +1,7 @@
 {
     "plant_image_rect":{
         "PeaNormal":{"x":28, "y":0, "width":28, "height":34},
-        "PuffShroom":{"x":0, "y":28, "width":35, "height":38},
+        "PuffShroom":{"x":0, "y":28, "width":70, "height":80},
         "PuffShroomSleep":{"x":1, "y":0, "width":39, "height":65}
     }
 }
