@@ -283,11 +283,15 @@ class TaekwondoGuard(Plant):
 
     def canAttack(self, zombie):
         """Return True if a zombie is within kicking range."""
-        # Extend the guard's attack range to twice its width so it can
-        # kick zombies that are a short distance away instead of only
-        # when they overlap the guard's own rectangle.
-        attack_rect = pg.Rect(self.rect.x, self.rect.y,
-                              self.rect.width * 2, self.rect.height)
+
+        # Shorten the previously doubled range by one grid cell for balance
+        attack_rect = pg.Rect(
+            self.rect.x,
+            self.rect.y,
+            self.rect.width * 2 - c.GRID_X_SIZE,
+            self.rect.height,
+        )
+
         return attack_rect.colliderect(zombie.rect)
 
     def setAttack(self, zombie):
@@ -303,8 +307,10 @@ class TaekwondoGuard(Plant):
         interval = self.attack_interval / self.fire_rate_multiplier
         if (self.current_time - self.attack_timer) > interval:
             self.changeFrames([self.kick_frame])
-            # Double the damage dealt by each kick
-            self.attack_zombie.setDamage(4)
+
+            # Reduced kick damage for balance
+            self.attack_zombie.setDamage(2)
+
             overlap = self.rect.right - self.attack_zombie.rect.left
             push = overlap + c.GRID_X_SIZE
             self.attack_zombie.rect.x += push
@@ -366,9 +372,11 @@ class MolotovProjectile(pg.sprite.Sprite):
         self.rect.bottom = bottom
         self.level = level
         self.x_vel = 4
+        self.y_vel = -8
+        self.gravity = 0.5
+        self.ground = bottom
         self.state = c.FLY
         self.current_time = 0
-        self.radius = self.rect.w // 2
         self.animate_timer = 0
         self.animate_interval = 100
         self.frame_index = 0
@@ -377,63 +385,19 @@ class MolotovProjectile(pg.sprite.Sprite):
         self.current_time = game_info[c.CURRENT_TIME]
         if self.state == c.FLY:
             self.rect.x += self.x_vel
-            if self.rect.x > c.SCREEN_WIDTH:
+            self.rect.y += self.y_vel
+            self.y_vel += self.gravity
+            if self.rect.bottom >= self.ground:
+                self.rect.bottom = self.ground
                 self.on_hit()
+                return
+            if self.rect.x > c.SCREEN_WIDTH:
+                self.kill()
                 return
             if self.frames and (self.current_time - self.animate_timer) > self.animate_interval:
                 self.frame_index = (self.frame_index + 1) % len(self.frames)
                 self.image = self.frames[self.frame_index]
                 self.animate_timer = self.current_time
-
-    def on_hit(self):
-        fire = MolotovFire(self.rect.centerx, self.rect.bottom, self.current_time)
-        self.level.addBurnArea(fire)
-        self.kill()
-
-    def draw(self, surface):
-        surface.blit(self.image, self.rect)
-
-class MolotovProjectile(pg.sprite.Sprite):
-    def __init__(self, centerx, bottom, level):
-        super().__init__()
-
-        self.frames = []
-        name = 'MolotovProjectile'
-        if name in tool.GFX:
-            for frame in tool.GFX[name]:
-                rect = frame.get_rect()
-                self.frames.append(tool.get_image(frame, 0, 0, rect.w, rect.h))
-        if self.frames:
-            self.image = self.frames[0]
-        else:
-            self.image = pg.Surface((20, 20), pg.SRCALPHA)
-            pg.draw.circle(self.image, (255, 120, 0), (10, 10), 10)
-        self.rect = self.image.get_rect()
-        self.rect.centerx = centerx
-        self.rect.bottom = bottom
-        self.level = level
-        self.x_vel = 4
-        self.state = c.FLY
-        self.current_time = 0
-
-        self.radius = self.rect.w // 2
-        self.animate_timer = 0
-        self.animate_interval = 100
-        self.frame_index = 0
-
-
-    def update(self, game_info):
-        self.current_time = game_info[c.CURRENT_TIME]
-        if self.state == c.FLY:
-            self.rect.x += self.x_vel
-            if self.rect.x > c.SCREEN_WIDTH:
-                self.kill()
-
-            if self.frames and (self.current_time - self.animate_timer) > self.animate_interval:
-                self.frame_index = (self.frame_index + 1) % len(self.frames)
-                self.image = self.frames[self.frame_index]
-                self.animate_timer = self.current_time
-
 
     def on_hit(self):
         fire = MolotovFire(self.rect.centerx, self.rect.bottom, self.current_time)
@@ -466,23 +430,21 @@ class MolotovStudent(Plant):
 class MolotovFire(pg.sprite.Sprite):
     def __init__(self, centerx, bottom, start_time):
         super().__init__()
-        width = c.GRID_X_SIZE * 3
-        height = c.GRID_Y_SIZE * 3
-
+        self.radius = c.GRID_X_SIZE
         name = 'MolotovFire'
         self.frames = []
         if name in tool.GFX:
             for frame in tool.GFX[name]:
                 rect = frame.get_rect()
-                self.frames.append(tool.get_image(frame, 0, 0, rect.w, rect.h))
+                self.frames.append(pg.transform.scale(frame, (self.radius * 2, self.radius * 2)))
         if self.frames:
-            self.image = pg.transform.scale(self.frames[0], (width, height))
+            self.image = self.frames[0]
         else:
-            self.image = pg.Surface((width, height), pg.SRCALPHA)
-            self.image.fill((255, 80, 0, 100))
+            self.image = pg.Surface((self.radius * 2, self.radius * 2), pg.SRCALPHA)
+            pg.draw.circle(self.image, (255, 80, 0, 100), (self.radius, self.radius), self.radius)
         self.rect = self.image.get_rect()
         self.rect.centerx = centerx
-        self.rect.bottom = bottom + c.GRID_Y_SIZE
+        self.rect.bottom = bottom
         self.start_time = start_time
         self.damage_timer = start_time - 1000
         self.frame_index = 0
@@ -496,15 +458,15 @@ class MolotovFire(pg.sprite.Sprite):
             self.kill()
             return
         if current_time - self.damage_timer >= 1000:
+            center = pg.Vector2(self.rect.center)
             for group in zombie_groups:
                 for zombie in group:
-                    if self.rect.colliderect(zombie.rect):
-                        zombie.setDamage(1)
+                    if center.distance_to(zombie.rect.center) <= self.radius:
+                        zombie.setDamage(0.5)
             self.damage_timer = current_time
         if self.frame_num and (current_time - self.animate_timer) > self.animate_interval:
             self.frame_index = (self.frame_index + 1) % self.frame_num
-            frame = pg.transform.scale(self.frames[self.frame_index], (self.rect.w, self.rect.h))
-            self.image = frame
+            self.image = self.frames[self.frame_index]
             self.animate_timer = current_time
 
 class KPopIdol(Plant):
