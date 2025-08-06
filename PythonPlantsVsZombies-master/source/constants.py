@@ -28,18 +28,21 @@ SIZE_MULTIPLIER = 1.3
 #GAME INFO DICTIONARY KEYS
 CURRENT_TIME = 'current time'
 LEVEL_NUM = 'level num'
+HIGH_SCORE = 'high score'
 
 #STATES FOR ENTIRE GAME
 MAIN_MENU = 'main menu'
 LOAD_SCREEN = 'load screen'
-GAME_LOSE = 'game los'
+GAME_LOSE = 'game lose'
 GAME_VICTORY = 'game victory'
 LEVEL = 'level'
 
 MAIN_MENU_IMAGE = 'MainMenu'
 OPTION_ADVENTURE = 'Adventure'
-GAME_LOOSE_IMAGE = 'GameLoose'
-GAME_VICTORY_IMAGE = 'GameVictory'
+# Screen images for end-of-level states. These fall back to existing artwork
+# from the resources folder to avoid missing-file errors when a game ends.
+GAME_LOSE_IMAGE = 'Adventure_1'
+GAME_VICTORY_IMAGE = 'Adventure_0'
 
 #MAP COMPONENTS
 BACKGROUND_NAME = 'Background'

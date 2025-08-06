@@ -2,6 +2,7 @@ __author__ = 'from cuberg with love'
 
 import os
 import json
+import random
 import pygame as pg
 from .. import tool
 from .. import constants as c
@@ -23,11 +24,9 @@ class Level(tool.State):
         self.initState()
 
     def loadMap(self):
-        map_file = 'level_' + str(self.game_info[c.LEVEL_NUM]) + '.json'
-        file_path = os.path.join('source', 'data', 'map', map_file)
-        f = open(file_path)
-        self.map_data = json.load(f)
-        f.close()
+        file_path = os.path.join('source', 'data', 'map', 'level_1.json')
+        with open(file_path) as f:
+            self.map_data = json.load(f)
     
     def setupBackground(self):
         img_index = self.map_data[c.BACKGROUND_TYPE]
@@ -53,14 +52,10 @@ class Level(tool.State):
             self.bullet_groups.append(pg.sprite.Group())
     
     def setupZombies(self):
-        def takeTime(element):
-            return element[0]
-
-        self.zombie_list = []
-        for data in self.map_data[c.ZOMBIE_LIST]:
-            self.zombie_list.append((data['time'], data['name'], data['map_y']))
-        self.zombie_start_time = 0
-        self.zombie_list.sort(key=takeTime)
+        self.spawn_interval = 5000
+        self.last_spawn_time = self.current_time
+        self.difficulty_timer = self.current_time
+        self.difficulty_level = 0
 
     def setupCars(self):
         self.cars = []
@@ -108,19 +103,25 @@ class Level(tool.State):
             self.produce_sun = False
         self.sun_timer = self.current_time
 
+        self.score = 0
+        self.high_score = self.game_info.get(c.HIGH_SCORE, 0)
+        self.score_font = pg.font.SysFont(None, 30)
+
         self.removeMouseImage()
         self.setupGroups()
         self.setupZombies()
         self.setupCars()
 
     def play(self, mouse_pos, mouse_click):
-        if self.zombie_start_time == 0:
-            self.zombie_start_time = self.current_time
-        elif len(self.zombie_list) > 0:
-            data = self.zombie_list[0]
-            if  data[0] <= (self.current_time - self.zombie_start_time):
-                self.createZombie(data[1], data[2])
-                self.zombie_list.remove(data)
+        if (self.current_time - self.last_spawn_time) >= self.spawn_interval:
+            lane = random.randrange(self.map_y_len)
+            name = self.chooseZombieType()
+            self.createZombie(name, lane)
+            self.last_spawn_time = self.current_time
+        if (self.current_time - self.difficulty_timer) >= 30000:
+            self.difficulty_timer = self.current_time
+            self.difficulty_level += 1
+            self.spawn_interval = max(1000, int(self.spawn_interval * 0.9))
         self.applyIdolBuffs()
 
         for i in range(self.map_y_len):
@@ -169,18 +170,36 @@ class Level(tool.State):
         self.checkCarCollisions()
         self.checkGameState()
 
+    def chooseZombieType(self):
+        types = [c.NORMAL_ZOMBIE]
+        if self.difficulty_level > 1:
+            types.append(c.CONEHEAD_ZOMBIE)
+        if self.difficulty_level > 3:
+            types.append(c.FLAG_ZOMBIE)
+        if self.difficulty_level > 5:
+            types.append(c.BUCKETHEAD_ZOMBIE)
+        if self.difficulty_level > 7:
+            types.append(c.NEWSPAPER_ZOMBIE)
+        return random.choice(types)
+
     def createZombie(self, name, map_y):
         x, y = self.map.getMapGridPos(0, map_y)
         if name == c.NORMAL_ZOMBIE:
-            self.zombie_groups[map_y].add(zombie.NormalZombie(c.ZOMBIE_START_X, y, self.head_group))
+            self.zombie_groups[map_y].add(zombie.NormalZombie(c.ZOMBIE_START_X, y, self.head_group, self))
         elif name == c.CONEHEAD_ZOMBIE:
-            self.zombie_groups[map_y].add(zombie.ConeHeadZombie(c.ZOMBIE_START_X, y, self.head_group))
+            self.zombie_groups[map_y].add(zombie.ConeHeadZombie(c.ZOMBIE_START_X, y, self.head_group, self))
         elif name == c.BUCKETHEAD_ZOMBIE:
-            self.zombie_groups[map_y].add(zombie.BucketHeadZombie(c.ZOMBIE_START_X, y, self.head_group))
+            self.zombie_groups[map_y].add(zombie.BucketHeadZombie(c.ZOMBIE_START_X, y, self.head_group, self))
         elif name == c.FLAG_ZOMBIE:
-            self.zombie_groups[map_y].add(zombie.FlagZombie(c.ZOMBIE_START_X, y, self.head_group))
+            self.zombie_groups[map_y].add(zombie.FlagZombie(c.ZOMBIE_START_X, y, self.head_group, self))
         elif name == c.NEWSPAPER_ZOMBIE:
-            self.zombie_groups[map_y].add(zombie.NewspaperZombie(c.ZOMBIE_START_X, y, self.head_group))
+            self.zombie_groups[map_y].add(zombie.NewspaperZombie(c.ZOMBIE_START_X, y, self.head_group, self))
+
+    def addScore(self, value):
+        self.score += value
+        if self.score > self.high_score:
+            self.high_score = self.score
+            self.game_info[c.HIGH_SCORE] = self.high_score
 
     def canSeedPlant(self):
         x, y = pg.mouse.get_pos()
@@ -330,6 +349,7 @@ class Level(tool.State):
         map_x, map_y = self.map.getMapIndex(x, y)
         if self.bar_type != c.CHOSSEBAR_BOWLING:
             self.map.setMapGridType(map_x, map_y, c.MAP_EMPTY)
+        plant.play_death_sound()
         plant.kill()
 
     def checkPlant(self, plant, i):
@@ -358,14 +378,6 @@ class Level(tool.State):
                 if plant.health <= 0:
                     self.killPlant(plant)
 
-    def checkVictory(self):
-        if len(self.zombie_list) > 0:
-            return False
-        for i in range(self.map_y_len):
-            if len(self.zombie_groups[i]) > 0:
-                return False
-        return True
-    
     def checkLose(self):
         for i in range(self.map_y_len):
             for zombie in self.zombie_groups[i]:
@@ -374,11 +386,7 @@ class Level(tool.State):
         return False
 
     def checkGameState(self):
-        if self.checkVictory():
-            self.game_info[c.LEVEL_NUM] += 1
-            self.next = c.GAME_VICTORY
-            self.done = True
-        elif self.checkLose():
+        if self.checkLose():
             self.next = c.GAME_LOSE
             self.done = True
 
@@ -410,5 +418,13 @@ class Level(tool.State):
             self.head_group.draw(surface)
             self.sun_group.draw(surface)
 
+            score_surf = self.score_font.render(f"Score: {self.score}", True, c.BLACK)
+            high_surf = self.score_font.render(f"High: {self.high_score}", True, c.BLACK)
+            score_rect = score_surf.get_rect(topright=(c.SCREEN_WIDTH - 10, 10))
+            high_rect = high_surf.get_rect(topright=(c.SCREEN_WIDTH - 10, score_rect.bottom + 5))
+            surface.blit(score_surf, score_rect)
+            surface.blit(high_surf, high_rect)
+
             if self.drag_plant:
                 self.drawMouseShow(surface)
+
