@@ -1,6 +1,5 @@
 __author__ = 'from cuberg with love'
 
-import os
 import pygame as pg
 from .. import tool
 from .. import constants as c
@@ -8,7 +7,7 @@ from .. import constants as c
 class Zombie(pg.sprite.Sprite):
     attack_sound = None
 
-    def __init__(self, x, y, name, health, head_group=None, damage=1):
+    def __init__(self, x, y, name, health, head_group=None, damage=1, level=None):
         pg.sprite.Sprite.__init__(self)
         
         self.name = name
@@ -29,6 +28,8 @@ class Zombie(pg.sprite.Sprite):
         self.losHead = False
         self.helmet = False
         self.head_group = head_group
+        self.level = level
+        self.score = 0
 
         self.walk_timer = 0
         self.animate_timer = 0
@@ -42,9 +43,7 @@ class Zombie(pg.sprite.Sprite):
         self.freeze_timer = 0
 
         if Zombie.attack_sound is None:
-            sound_path = os.path.join("resources", "sound", "zombie.wav")
-            if os.path.exists(sound_path):
-                Zombie.attack_sound = pg.mixer.Sound(sound_path)
+            Zombie.attack_sound = tool.SFX.get("zombie")
     
     def loadFrames(self, frames, name, image_x, colorkey=c.BLACK):
         frame_list = tool.GFX[name]
@@ -237,6 +236,11 @@ class Zombie(pg.sprite.Sprite):
             ratio = max(self.health, 0) / self.max_health
             pg.draw.rect(surface, c.GREEN, (bar_x, bar_y, int(bar_width * ratio), bar_height))
 
+    def kill(self):
+        if self.level:
+            self.level.addScore(self.score)
+        super().kill()
+
 class ZombieHead(Zombie):
     def __init__(self, x, y):
         Zombie.__init__(self, x, y, c.ZOMBIE_HEAD, 0)
@@ -252,8 +256,9 @@ class ZombieHead(Zombie):
         self.animate_interval = 100
 
 class NormalZombie(Zombie):
-    def __init__(self, x, y, head_group):
-        Zombie.__init__(self, x, y, c.NORMAL_ZOMBIE, c.NORMAL_HEALTH, head_group)
+    def __init__(self, x, y, head_group, level):
+        Zombie.__init__(self, x, y, c.NORMAL_ZOMBIE, c.NORMAL_HEALTH, head_group, level=level)
+        self.score = 10
 
     def loadImages(self):
         self.walk_frames = []
@@ -281,9 +286,10 @@ class NormalZombie(Zombie):
         self.frames = self.walk_frames
 
 class ConeHeadZombie(Zombie):
-    def __init__(self, x, y, head_group):
-        Zombie.__init__(self, x, y, c.CONEHEAD_ZOMBIE, c.CONEHEAD_HEALTH, head_group)
+    def __init__(self, x, y, head_group, level):
+        Zombie.__init__(self, x, y, c.CONEHEAD_ZOMBIE, c.CONEHEAD_HEALTH, head_group, level=level)
         self.helmet = True
+        self.score = 20
 
     def loadImages(self):
         self.helmet_walk_frames = []
@@ -317,9 +323,10 @@ class ConeHeadZombie(Zombie):
         self.frames = self.helmet_walk_frames
 
 class BucketHeadZombie(Zombie):
-    def __init__(self, x, y, head_group):
-        Zombie.__init__(self, x, y, c.BUCKETHEAD_ZOMBIE, c.BUCKETHEAD_HEALTH, head_group)
+    def __init__(self, x, y, head_group, level):
+        Zombie.__init__(self, x, y, c.BUCKETHEAD_ZOMBIE, c.BUCKETHEAD_HEALTH, head_group, level=level)
         self.helmet = True
+        self.score = 30
 
     def loadImages(self):
         self.helmet_walk_frames = []
@@ -353,8 +360,9 @@ class BucketHeadZombie(Zombie):
         self.frames = self.helmet_walk_frames
 
 class FlagZombie(Zombie):
-    def __init__(self, x, y, head_group):
-        Zombie.__init__(self, x, y, c.FLAG_ZOMBIE, c.FLAG_HEALTH, head_group)
+    def __init__(self, x, y, head_group, level):
+        Zombie.__init__(self, x, y, c.FLAG_ZOMBIE, c.FLAG_HEALTH, head_group, level=level)
+        self.score = 15
     
     def loadImages(self):
         self.walk_frames = []
@@ -382,9 +390,10 @@ class FlagZombie(Zombie):
         self.frames = self.walk_frames
 
 class NewspaperZombie(Zombie):
-    def __init__(self, x, y, head_group):
-        Zombie.__init__(self, x, y, c.NEWSPAPER_ZOMBIE, c.NEWSPAPER_HEALTH, head_group)
+    def __init__(self, x, y, head_group, level):
+        Zombie.__init__(self, x, y, c.NEWSPAPER_ZOMBIE, c.NEWSPAPER_HEALTH, head_group, level=level)
         self.helmet = True
+        self.score = 25
 
     def loadImages(self):
         self.helmet_walk_frames = []

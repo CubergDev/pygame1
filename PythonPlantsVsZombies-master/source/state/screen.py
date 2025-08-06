@@ -41,19 +41,24 @@ class Screen(tool.State):
 class GameVictoryScreen(Screen):
     def __init__(self):
         Screen.__init__(self)
-    
+
     def getImageName(self):
         return c.GAME_VICTORY_IMAGE
-    
+
     def set_next_state(self):
         return c.LEVEL
 
 class GameLoseScreen(Screen):
     def __init__(self):
         Screen.__init__(self)
-    
+
     def getImageName(self):
-        return c.GAME_LOOSE_IMAGE
-    
+        return c.GAME_LOSE_IMAGE
+
     def set_next_state(self):
         return c.MAIN_MENU
+
+    def startup(self, current_time, persist):
+        """Reset the level number on a game over before returning to the menu."""
+        super().startup(current_time, persist)
+        self.persist[c.LEVEL_NUM] = c.START_LEVEL_NUM

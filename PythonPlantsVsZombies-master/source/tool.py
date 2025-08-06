@@ -40,7 +40,8 @@ class Control():
         self.state_name = None
         self.state = None
         self.game_info = {c.CURRENT_TIME:0.0,
-                          c.LEVEL_NUM:c.START_LEVEL_NUM}
+                          c.LEVEL_NUM:c.START_LEVEL_NUM,
+                          c.HIGH_SCORE:0}
  
     def setup_states(self, state_dict, start_state):
         self.state_dict = state_dict
@@ -167,6 +168,20 @@ def loadPlantImageRect():
     f.close()
     return data[c.PLANT_IMAGE_RECT]
 
+def load_all_sfx(directory, accept=(".wav", ".ogg")):
+    """Load all sound files in *directory* into a dict keyed by filename."""
+    sfx = {}
+    if not os.path.isdir(directory):
+        return sfx
+    for name in os.listdir(directory):
+        base, ext = os.path.splitext(name)
+        if ext.lower() in accept:
+            try:
+                sfx[base] = pg.mixer.Sound(os.path.join(directory, name))
+            except pg.error:
+                pass
+    return sfx
+
 pg.init()
 pg.display.set_caption(c.ORIGINAL_CAPTION)
 SCREEN = pg.display.set_mode(c.SCREEN_SIZE)
@@ -174,3 +189,4 @@ SCREEN = pg.display.set_mode(c.SCREEN_SIZE)
 GFX = load_all_gfx(os.path.join("resources","graphics"))
 ZOMBIE_RECT = loadZombieImageRect()
 PLANT_RECT = loadPlantImageRect()
+SFX = load_all_sfx(os.path.join("resources", "sounds"))

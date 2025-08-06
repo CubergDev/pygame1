@@ -1,6 +1,5 @@
 __author__ = 'from cuberg with love'
 
-import os
 import pygame as pg
 from .. import tool
 from .. import constants as c
@@ -116,8 +115,11 @@ class Plant(pg.sprite.Sprite):
         self.fire_rate_multiplier = 1
         self.sun_multiplier = 1
 
-        sound_path = os.path.join("resources", "sound", f"{name}.wav")
-        self.sound = pg.mixer.Sound(sound_path) if os.path.exists(sound_path) else None
+        self.sound = tool.SFX.get(name)
+        self.deploy_sound = tool.SFX.get(f"{name}_deploy")
+        self.death_sound = tool.SFX.get(f"{name}_death")
+        if self.deploy_sound:
+            self.play_deploy_sound()
 
     def loadFrames(self, frames, name, scale, color=c.BLACK):
         frame_list = tool.GFX[name]
@@ -177,6 +179,14 @@ class Plant(pg.sprite.Sprite):
     def play_sound(self):
         if self.sound:
             self.sound.play()
+
+    def play_death_sound(self):
+        if self.death_sound:
+            self.death_sound.play()
+
+    def play_deploy_sound(self):
+        if self.deploy_sound:
+            self.deploy_sound.play()
 
     def canAttack(self, zombie):
         if self.state != c.SLEEP and zombie.state != c.DIE and self.rect.x <= zombie.rect.right:
@@ -285,11 +295,15 @@ class TaekwondoGuard(Plant):
     def canAttack(self, zombie):
         """Return True if a zombie is within kicking range."""
 
-        # Shorten the previously doubled range by one grid cell for balance
+        # Allow kicks on zombies in the same cell or the one directly ahead.
+        # The previous calculation doubled the width and then subtracted a grid
+        # size which could result in an area no larger than the plant itself.
+        # This new rectangle starts at the plant's position and extends one
+        # additional grid cell to the right, matching the intended melee range.
         attack_rect = pg.Rect(
             self.rect.x,
             self.rect.y,
-            self.rect.width * 2 - c.GRID_X_SIZE,
+            self.rect.width + c.GRID_X_SIZE,
             self.rect.height,
         )
 
@@ -372,7 +386,7 @@ class MolotovProjectile(pg.sprite.Sprite):
         self.rect.centerx = centerx
         self.rect.bottom = bottom
         self.level = level
-        self.x_vel = 4
+        self.x_vel = 13
         self.y_vel = -8
         self.gravity = 0.5
         self.ground = bottom
@@ -414,7 +428,7 @@ class MolotovStudent(Plant):
         super().__init__(x, y, c.MOLOTOVSTUDENT, c.PLANT_HEALTH, level.bullet_groups[map_y])
         self.state = c.ATTACK
         self.level = level
-        self.throw_interval = 10000
+        self.throw_interval = 5000
         self.throw_timer = -self.throw_interval
 
     def attacking(self):
