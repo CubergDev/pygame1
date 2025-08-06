@@ -271,6 +271,16 @@ class TaekwondoGuard(Plant):
         self.attack_interval = 2000
         self.attack_zombie = None
 
+    def loadImages(self, name, scale):
+        frames = tool.GFX[name]
+        rect = frames[0].get_rect()
+        self.idle_frame = tool.get_image(frames[0], 0, 0, rect.w, rect.h, c.BLACK, scale)
+        if len(frames) > 1:
+            self.kick_frame = tool.get_image(frames[1], 0, 0, rect.w, rect.h, c.BLACK, scale)
+        else:
+            self.kick_frame = self.idle_frame
+        self.frames = [self.idle_frame]
+
     def canAttack(self, zombie):
         return self.rect.colliderect(zombie.rect)
 
@@ -286,6 +296,7 @@ class TaekwondoGuard(Plant):
             return
         interval = self.attack_interval / self.fire_rate_multiplier
         if (self.current_time - self.attack_timer) > interval:
+            self.changeFrames([self.kick_frame])
             self.attack_zombie.setDamage(2)
             overlap = self.rect.right - self.attack_zombie.rect.left
             push = overlap + c.GRID_X_SIZE
@@ -293,34 +304,87 @@ class TaekwondoGuard(Plant):
             self.attack_zombie.setWalk()
             self.play_sound()
             self.attack_timer = self.current_time
+        elif (self.current_time - self.attack_timer) > 200:
+            self.changeFrames([self.idle_frame])
 
     def setIdle(self):
         self.state = c.IDLE
         self.attack_zombie = None
+        self.changeFrames([self.idle_frame])
 
 class SuitcaseBarricade(Plant):
     def __init__(self, x, y):
         super().__init__(x, y, c.SUITCASEBARRICADE, c.SUITCASEBARRICADE_HEALTH, None)
-        self.cracked1 = False
-        self.cracked2 = False
-        self.load_images()
+        self.damaged = False
 
-    def load_images(self):
-        self.cracked1_frames = []
-        self.cracked2_frames = []
-        cracked1_name = self.name + '_cracked1'
-        cracked2_name = self.name + '_cracked2'
-        self.loadFrames(self.cracked1_frames, cracked1_name, 1)
-        self.loadFrames(self.cracked2_frames, cracked2_name, 1)
+    def loadImages(self, name, scale):
+        frames = tool.GFX[name]
+        rect = frames[0].get_rect()
+        def grab(index):
+            frame = frames[index] if index < len(frames) else frames[0]
+            return tool.get_image(frame, 0, 0, rect.w, rect.h, c.BLACK, scale)
+        self.normal_frame = grab(0)
+        self.hit_frame = grab(1)
+        self.damaged_frame = grab(2)
+        self.frames = [self.normal_frame]
+
+    def setDamage(self, damage, zombie):
+        super().setDamage(damage, zombie)
+        if not self.damaged and self.health <= c.SUITCASEBARRICADE_CRACKED1_HEALTH:
+            self.damaged = True
+            self.normal_frame = self.damaged_frame
+        self.changeFrames([self.hit_frame])
 
     def idling(self):
-        if not self.cracked1 and self.health <= c.SUITCASEBARRICADE_CRACKED1_HEALTH:
-            self.changeFrames(self.cracked1_frames)
-            self.cracked1 = True
-        elif not self.cracked2 and self.health <= c.SUITCASEBARRICADE_CRACKED2_HEALTH:
-            self.changeFrames(self.cracked2_frames)
-            self.cracked2 = True
+        if (self.current_time - self.hit_timer) > 200:
+            self.changeFrames([self.normal_frame])
 
+
+class MolotovProjectile(pg.sprite.Sprite):
+    def __init__(self, centerx, bottom, level):
+        super().__init__()
+        self.frames = []
+        name = 'MolotovProjectile'
+        if name in tool.GFX:
+            for frame in tool.GFX[name]:
+                rect = frame.get_rect()
+                self.frames.append(tool.get_image(frame, 0, 0, rect.w, rect.h))
+        if self.frames:
+            self.image = self.frames[0]
+        else:
+            self.image = pg.Surface((20, 20), pg.SRCALPHA)
+            pg.draw.circle(self.image, (255, 120, 0), (10, 10), 10)
+        self.rect = self.image.get_rect()
+        self.rect.centerx = centerx
+        self.rect.bottom = bottom
+        self.level = level
+        self.x_vel = 4
+        self.state = c.FLY
+        self.current_time = 0
+        self.radius = self.rect.w // 2
+        self.animate_timer = 0
+        self.animate_interval = 100
+        self.frame_index = 0
+
+    def update(self, game_info):
+        self.current_time = game_info[c.CURRENT_TIME]
+        if self.state == c.FLY:
+            self.rect.x += self.x_vel
+            if self.rect.x > c.SCREEN_WIDTH:
+                self.on_hit()
+                return
+            if self.frames and (self.current_time - self.animate_timer) > self.animate_interval:
+                self.frame_index = (self.frame_index + 1) % len(self.frames)
+                self.image = self.frames[self.frame_index]
+                self.animate_timer = self.current_time
+
+    def on_hit(self):
+        fire = MolotovFire(self.rect.centerx, self.rect.bottom, self.current_time)
+        self.level.addBurnArea(fire)
+        self.kill()
+
+    def draw(self, surface):
+        surface.blit(self.image, self.rect)
 
 class MolotovProjectile(pg.sprite.Sprite):
     def __init__(self, centerx, bottom, level):
@@ -383,9 +447,9 @@ class MolotovStudent(Plant):
 
     def attacking(self):
         interval = self.throw_interval / self.fire_rate_multiplier
-        if (self.current_time - self.throw_timer) > interval:
-            bottle = MolotovProjectile(self.rect.centerx, self.rect.bottom, self.level)
 
+        if (self.current_time - self.throw_timer) >= interval:
+            bottle = MolotovProjectile(self.rect.centerx, self.rect.bottom, self.level)
             bottle.current_time = self.current_time
 
             self.bullet_group.add(bottle)

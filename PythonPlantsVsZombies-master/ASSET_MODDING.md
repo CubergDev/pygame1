@@ -18,7 +18,9 @@ frame counts update the matching rectangle entry in
 
 ### SojuBottleSlingshot (Peashooter)
 * **Sprite folder:** `resources/graphics/Plants/Peashooter/`
-* **Frames:** 13 files `Peashooter_0.png` … `Peashooter_12.png`
+
+* **Frames:** single file `Peashooter_0.png`
+
 * **Card art:** `resources/graphics/Cards/card_peashooter.png` and
   `card_peashooter_move.png`
 * **Bullet:** replace `resources/graphics/Bullets/PeaNormal/PeaNormal_0.png`
@@ -28,20 +30,22 @@ frame counts update the matching rectangle entry in
 
 ### EomukVendor (SunFlower)
 * **Sprite folder:** `resources/graphics/Plants/SunFlower/`
-* **Frames:** 18 files `SunFlower_0.png` … `SunFlower_17.png`
+
+* **Frames:** single file `SunFlower_0.png`
+
 * **Card art:** `resources/graphics/Cards/card_sunflower.png` and
   `card_sunflower_move.png`
 * **Optional sounds:** `resources/sounds/EomukVendor_deploy.ogg` and
   `EomukVendor_death.ogg`
 
 ### SuitcaseBarricade (WallNut)
-* **Sprite folders:**
-  * `resources/graphics/Plants/WallNut/WallNut/` – 16 files
-    `WallNut_0.png` … `WallNut_15.png` (intact)
-  * `resources/graphics/Plants/WallNut/WallNut_cracked1/` – 11 files
-    `WallNut_cracked1_0.png` … `WallNut_cracked1_10.png`
-  * `resources/graphics/Plants/WallNut/WallNut_cracked2/` – 15 files
-    `WallNut_cracked2_0.png` … `WallNut_cracked2_14.png`
+
+* **Sprite folder:** `resources/graphics/Plants/WallNut/WallNut/`
+* **Frames:** three files
+  * `WallNut_0.png` – normal
+  * `WallNut_1.png` – when taking damage
+  * `WallNut_2.png` – damaged state
+
 * **Card art:** `resources/graphics/Cards/card_wallnut.png` and
   `card_wallnut_move.png`
 * **Optional sounds:** `resources/sounds/SuitcaseBarricade_deploy.ogg` and
@@ -49,7 +53,11 @@ frame counts update the matching rectangle entry in
 
 ### TaekwondoGuard (RepeaterPea)
 * **Sprite folder:** `resources/graphics/Plants/RepeaterPea/`
-* **Frames:** 15 files `RepeaterPea_0.png` … `RepeaterPea_14.png`
+
+* **Frames:** two files
+  * `RepeaterPea_0.png` – standing
+  * `RepeaterPea_1.png` – kicking
+
 * **Card art:** `resources/graphics/Cards/card_repeaterpea.png` and
   `card_repeaterpea_move.png`
 * **Bullet:** uses the same pea assets as SojuBottleSlingshot
@@ -58,13 +66,14 @@ frame counts update the matching rectangle entry in
 
 ### MolotovStudent (CherryBomb)
 * **Sprite folder:** `resources/graphics/Plants/CherryBomb/`
-* **Frames:** 7 files `CherryBomb_0.png` … `CherryBomb_6.png`
+
+* **Frames:** single file `CherryBomb_0.png`
 * **Card art:** `resources/graphics/Cards/card_cherrybomb.png` and
   `card_cherrybomb_move.png`
-
 * **Projectile:** optional frames in
   `resources/graphics/Effects/MolotovProjectile/MolotovProjectile_0.png`,
   `MolotovProjectile_1.png`, …
+
 
 * **Burn effect:** supply frames in
   `resources/graphics/Effects/MolotovFire/MolotovFire_0.png`,
@@ -73,11 +82,10 @@ frame counts update the matching rectangle entry in
   `MolotovStudent_death.ogg`
 
 ### KPopIdol (PuffShroom)
-* **Sprite folders:**
-  * Active: `resources/graphics/Plants/PuffShroom/PuffShroom/` – 14 files
-    `PuffShroom_0.png` … `PuffShroom_13.png`
-  * Sleeping: `resources/graphics/Plants/PuffShroom/PuffShroomSleep/` – 17
-    files `PuffShroomSleep_0.png` … `PuffShroomSleep_16.png`
+
+* **Sprite folder:** `resources/graphics/Plants/PuffShroom/PuffShroom/`
+* **Frames:** single file `PuffShroom_0.png`
+
 * **Card art:** `resources/graphics/Cards/card_puffshroom.png` and
   `card_puffshroom_move.png`
 * **Aura effect:** optional frames in
@@ -109,9 +117,10 @@ menubar finds them.
 
 ## Sun points
 
-1. The pickup animation is stored under `resources/graphics/Plants/Sun/`
-   as `Sun_0.png`–`Sun_21.png` (22 PNG frames).
-2. Swap these frames to change the currency icon and adjust `SUN_VALUE`
+
+1. The pickup image is `resources/graphics/Plants/Sun/Sun_0.png`.
+2. Swap this file to change the currency icon and adjust `SUN_VALUE`
+
    in `source/constants.py` if you want a different reward.
 
 ## Sounds
