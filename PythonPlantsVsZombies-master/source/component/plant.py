@@ -283,6 +283,7 @@ class TaekwondoGuard(Plant):
 
     def canAttack(self, zombie):
         """Return True if a zombie is within kicking range."""
+
         # Shorten the previously doubled range by one grid cell for balance
         attack_rect = pg.Rect(
             self.rect.x,
@@ -290,6 +291,7 @@ class TaekwondoGuard(Plant):
             self.rect.width * 2 - c.GRID_X_SIZE,
             self.rect.height,
         )
+
         return attack_rect.colliderect(zombie.rect)
 
     def setAttack(self, zombie):
@@ -305,8 +307,10 @@ class TaekwondoGuard(Plant):
         interval = self.attack_interval / self.fire_rate_multiplier
         if (self.current_time - self.attack_timer) > interval:
             self.changeFrames([self.kick_frame])
+
             # Reduced kick damage for balance
             self.attack_zombie.setDamage(2)
+
             overlap = self.rect.right - self.attack_zombie.rect.left
             push = overlap + c.GRID_X_SIZE
             self.attack_zombie.rect.x += push
