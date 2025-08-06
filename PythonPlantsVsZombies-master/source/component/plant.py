@@ -321,6 +321,7 @@ class SuitcaseBarricade(Plant):
 class MolotovProjectile(pg.sprite.Sprite):
     def __init__(self, centerx, bottom, level):
         super().__init__()
+
         self.frames = []
         name = 'MolotovProjectile'
         if name in tool.GFX:
@@ -339,10 +340,12 @@ class MolotovProjectile(pg.sprite.Sprite):
         self.x_vel = 4
         self.state = c.FLY
         self.current_time = 0
+
         self.radius = self.rect.w // 2
         self.animate_timer = 0
         self.animate_interval = 100
         self.frame_index = 0
+
 
     def update(self, game_info):
         self.current_time = game_info[c.CURRENT_TIME]
@@ -350,10 +353,12 @@ class MolotovProjectile(pg.sprite.Sprite):
             self.rect.x += self.x_vel
             if self.rect.x > c.SCREEN_WIDTH:
                 self.kill()
+
             if self.frames and (self.current_time - self.animate_timer) > self.animate_interval:
                 self.frame_index = (self.frame_index + 1) % len(self.frames)
                 self.image = self.frames[self.frame_index]
                 self.animate_timer = self.current_time
+
 
     def on_hit(self):
         fire = MolotovFire(self.rect.centerx, self.rect.bottom, self.current_time)
@@ -376,7 +381,9 @@ class MolotovStudent(Plant):
         interval = self.throw_interval / self.fire_rate_multiplier
         if (self.current_time - self.throw_timer) > interval:
             bottle = MolotovProjectile(self.rect.centerx, self.rect.bottom, self.level)
+
             bottle.current_time = self.current_time
+
             self.bullet_group.add(bottle)
             self.play_sound()
             self.throw_timer = self.current_time
@@ -386,6 +393,7 @@ class MolotovFire(pg.sprite.Sprite):
         super().__init__()
         width = c.GRID_X_SIZE * 3
         height = c.GRID_Y_SIZE * 3
+
         name = 'MolotovFire'
         self.frames = []
         if name in tool.GFX:
@@ -397,6 +405,7 @@ class MolotovFire(pg.sprite.Sprite):
         else:
             self.image = pg.Surface((width, height), pg.SRCALPHA)
             self.image.fill((255, 80, 0, 100))
+
         self.rect = self.image.get_rect()
         self.rect.centerx = centerx
         self.rect.bottom = bottom + c.GRID_Y_SIZE
