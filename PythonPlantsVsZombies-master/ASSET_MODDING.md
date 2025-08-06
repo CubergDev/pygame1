@@ -1,6 +1,7 @@
 # Asset Replacement Pipeline
 
 This guide walks through swapping the bundled art and audio with your own
+
 creations. Every asset lives under `resources/` and is loaded purely by
 its filename, so replacing a file with one that uses the exact same name
 is enough for the game to pick it up. The sections below list the folders,
@@ -17,7 +18,9 @@ frame counts update the matching rectangle entry in
 
 ### SojuBottleSlingshot (Peashooter)
 * **Sprite folder:** `resources/graphics/Plants/Peashooter/`
+
 * **Frames:** single file `Peashooter_0.png`
+
 * **Card art:** `resources/graphics/Cards/card_peashooter.png` and
   `card_peashooter_move.png`
 * **Bullet:** replace `resources/graphics/Bullets/PeaNormal/PeaNormal_0.png`
@@ -27,18 +30,22 @@ frame counts update the matching rectangle entry in
 
 ### EomukVendor (SunFlower)
 * **Sprite folder:** `resources/graphics/Plants/SunFlower/`
+
 * **Frames:** single file `SunFlower_0.png`
+
 * **Card art:** `resources/graphics/Cards/card_sunflower.png` and
   `card_sunflower_move.png`
 * **Optional sounds:** `resources/sounds/EomukVendor_deploy.ogg` and
   `EomukVendor_death.ogg`
 
 ### SuitcaseBarricade (WallNut)
+
 * **Sprite folder:** `resources/graphics/Plants/WallNut/WallNut/`
 * **Frames:** three files
   * `WallNut_0.png` – normal
   * `WallNut_1.png` – when taking damage
   * `WallNut_2.png` – damaged state
+
 * **Card art:** `resources/graphics/Cards/card_wallnut.png` and
   `card_wallnut_move.png`
 * **Optional sounds:** `resources/sounds/SuitcaseBarricade_deploy.ogg` and
@@ -46,9 +53,11 @@ frame counts update the matching rectangle entry in
 
 ### TaekwondoGuard (RepeaterPea)
 * **Sprite folder:** `resources/graphics/Plants/RepeaterPea/`
+
 * **Frames:** two files
   * `RepeaterPea_0.png` – standing
   * `RepeaterPea_1.png` – kicking
+
 * **Card art:** `resources/graphics/Cards/card_repeaterpea.png` and
   `card_repeaterpea_move.png`
 * **Bullet:** uses the same pea assets as SojuBottleSlingshot
@@ -57,12 +66,15 @@ frame counts update the matching rectangle entry in
 
 ### MolotovStudent (CherryBomb)
 * **Sprite folder:** `resources/graphics/Plants/CherryBomb/`
+
 * **Frames:** single file `CherryBomb_0.png`
 * **Card art:** `resources/graphics/Cards/card_cherrybomb.png` and
   `card_cherrybomb_move.png`
 * **Projectile:** optional frames in
   `resources/graphics/Effects/MolotovProjectile/MolotovProjectile_0.png`,
   `MolotovProjectile_1.png`, …
+
+
 * **Burn effect:** supply frames in
   `resources/graphics/Effects/MolotovFire/MolotovFire_0.png`,
   `MolotovFire_1.png`, … as desired
@@ -70,8 +82,10 @@ frame counts update the matching rectangle entry in
   `MolotovStudent_death.ogg`
 
 ### KPopIdol (PuffShroom)
+
 * **Sprite folder:** `resources/graphics/Plants/PuffShroom/PuffShroom/`
 * **Frames:** single file `PuffShroom_0.png`
+
 * **Card art:** `resources/graphics/Cards/card_puffshroom.png` and
   `card_puffshroom_move.png`
 * **Aura effect:** optional frames in
@@ -82,6 +96,7 @@ frame counts update the matching rectangle entry in
 Cards for all defenders must remain in `resources/graphics/Cards/` and keep
 their original `card_<plant>.png` and `card_<plant>_move.png` names so the
 menubar finds them.
+
 
 ## Start menu
 
@@ -102,8 +117,10 @@ menubar finds them.
 
 ## Sun points
 
+
 1. The pickup image is `resources/graphics/Plants/Sun/Sun_0.png`.
 2. Swap this file to change the currency icon and adjust `SUN_VALUE`
+
    in `source/constants.py` if you want a different reward.
 
 ## Sounds
