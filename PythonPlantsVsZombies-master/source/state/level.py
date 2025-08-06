@@ -269,8 +269,11 @@ class Level(tool.State):
                 if bullet.state == c.FLY:
                     zombie = pg.sprite.spritecollideany(bullet, self.zombie_groups[i], collided_func)
                     if zombie and zombie.state != c.DIE:
-                        zombie.setDamage(bullet.damage, bullet.ice)
-                        bullet.setExplode()
+                        if isinstance(bullet, plant.MolotovProjectile):
+                            bullet.on_hit()
+                        else:
+                            zombie.setDamage(bullet.damage, bullet.ice)
+                            bullet.setExplode()
     
     def checkZombieCollisions(self):
         collided_func = pg.sprite.collide_circle_ratio(0.7)
@@ -311,39 +314,15 @@ class Level(tool.State):
                     idols.append((p, i))
 
         for idol, row in idols:
-            idol_x, idol_y = self.map.getMapIndex(idol.rect.centerx, idol.rect.bottom)
-            for i in range(max(0, row-2), min(self.map_y_len, row+3)):
-                for other in self.plant_groups[i]:
+            idol_x, _ = self.map.getMapIndex(idol.rect.centerx, idol.rect.bottom)
+            for row_index in range(max(0, row - 2), min(self.map_y_len, row + 3)):
+                for other in self.plant_groups[row_index]:
                     other_x, _ = self.map.getMapIndex(other.rect.centerx, other.rect.bottom)
-                    if abs(other_x - idol_x) <= 2 and abs(i - row) <= 2:
+                    dx = other_x - idol_x
+                    dy = row_index - row
+                    if dx * dx + dy * dy <= 4:
                         other.fire_rate_multiplier *= 1.2
                         if other.name == c.EOMUKVENDOR:
-                            other.sun_multiplier *= 1.1
-
-    def addBurnArea(self, fire):
-        self.fire_group.add(fire)
-
-    def applyIdolBuffs(self):
-        # reset multipliers
-        for i in range(self.map_y_len):
-            for p in self.plant_groups[i]:
-                p.fire_rate_multiplier = 1
-                p.sun_multiplier = 1
-
-        idols = []
-        for i in range(self.map_y_len):
-            for p in self.plant_groups[i]:
-                if p.name == c.PUFFSHROOM:
-                    idols.append((p, i))
-
-        for idol, row in idols:
-            idol_x, idol_y = self.map.getMapIndex(idol.rect.centerx, idol.rect.bottom)
-            for i in range(max(0, row-2), min(self.map_y_len, row+3)):
-                for other in self.plant_groups[i]:
-                    other_x, _ = self.map.getMapIndex(other.rect.centerx, other.rect.bottom)
-                    if abs(other_x - idol_x) <= 2 and abs(i - row) <= 2:
-                        other.fire_rate_multiplier *= 1.2
-                        if other.name == c.SUNFLOWER:
                             other.sun_multiplier *= 1.1
 
     def killPlant(self, plant):
@@ -419,9 +398,13 @@ class Level(tool.State):
         elif self.state == c.PLAY:
             self.menubar.draw(surface)
             for i in range(self.map_y_len):
-                self.plant_groups[i].draw(surface)
-                self.zombie_groups[i].draw(surface)
-                self.bullet_groups[i].draw(surface)
+                for p in self.plant_groups[i]:
+                    p.draw(surface)
+                for z in self.zombie_groups[i]:
+                    z.draw(surface)
+                for b in self.bullet_groups[i]:
+                    b.draw(surface)
+            self.fire_group.draw(surface)
             for car in self.cars:
                 car.draw(surface)
             self.head_group.draw(surface)

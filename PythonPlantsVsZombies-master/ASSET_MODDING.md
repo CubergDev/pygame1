@@ -1,52 +1,131 @@
-# Asset Customization Guide
+# Asset Replacement Pipeline
 
-This project loads most of its visuals from the `resources/graphics` folder and can be extended with sound and music through `pygame.mixer`.  The following sections describe how to replace common game assets.
+This guide walks through swapping the bundled art and audio with your own
+creations. Every asset lives under `resources/` and is loaded purely by
+its filename, so replacing a file with one that uses the exact same name
+is enough for the game to pick it up. The sections below list the folders,
+exact file names, expected frame counts and optional sounds for each
+defender plus the surrounding UI.
 
-## Plant sprites
+## Defenders
 
-1. Each plant has a sub‑folder under `resources/graphics/Plants/` (for example, `SojuBottleSlingshot`, `SuitcaseBarricade`, `EomukVendor`).
-2. Inside each folder, animation frames are named `<PlantName>_0.png`, `<PlantName>_1.png`, etc.  Replace these files with your own PNGs while keeping the same naming scheme.
-3. If you add or remove frames, update the `plant.json` rectangle definitions in `source/data/entity/plant.json` to match the new frame sizes.
-4. Card thumbnails live in `resources/graphics/Cards/`; swap these images to change the icons shown on the menubar.
+For every defender place PNG frames in the folders listed below. Filenames
+must be zero‑indexed and consecutive (`Foo_0.png`, `Foo_1.png`, …). The
+engine uses whatever size you supply, but if you change dimensions or
+frame counts update the matching rectangle entry in
+`source/data/entity/plant.json`.
 
-## Backgrounds
-1. Gameplay backgrounds and UI panels are located in `resources/graphics/Screen/`.  Files such as `Adventure_0.png`, `ChooserBackground.png`, and `PanelBackground.png` correspond to level fields and menus.
-2. Replace any background image with another of the same dimensions to change the in‑game scenery.
+### SojuBottleSlingshot (Peashooter)
+* **Sprite folder:** `resources/graphics/Plants/Peashooter/`
+* **Frames:** single file `Peashooter_0.png`
+* **Card art:** `resources/graphics/Cards/card_peashooter.png` and
+  `card_peashooter_move.png`
+* **Bullet:** replace `resources/graphics/Bullets/PeaNormal/PeaNormal_0.png`
+  and `resources/graphics/Bullets/PeaNormalExplode/PeaNormalExplode_0.png`
+* **Optional sounds:** `resources/sounds/SojuBottleSlingshot_deploy.ogg` and
+  `SojuBottleSlingshot_death.ogg`
 
-## Sounds and music
-1. Create `resources/sounds/` for effects and `resources/music/` for loops.  Store audio as `.ogg` or `.wav`.
-2. In `source/tool.py`, load the audio with `pygame.mixer.Sound` for effects or `pygame.mixer.music.load` for background tracks:
-   ```python
-   SFX = {
-       'plant': pg.mixer.Sound('resources/sounds/plant.ogg'),
-       'zombie': pg.mixer.Sound('resources/sounds/zombie.ogg')
-   }
-   pg.mixer.music.load('resources/music/theme.ogg')
-   pg.mixer.music.play(-1)
-   ```
-3. Play the effects from gameplay code, e.g. `SFX['plant'].play()` when a plant is placed.
+### EomukVendor (SunFlower)
+* **Sprite folder:** `resources/graphics/Plants/SunFlower/`
+* **Frames:** single file `SunFlower_0.png`
+* **Card art:** `resources/graphics/Cards/card_sunflower.png` and
+  `card_sunflower_move.png`
+* **Optional sounds:** `resources/sounds/EomukVendor_deploy.ogg` and
+  `EomukVendor_death.ogg`
+
+### SuitcaseBarricade (WallNut)
+* **Sprite folder:** `resources/graphics/Plants/WallNut/WallNut/`
+* **Frames:** three files
+  * `WallNut_0.png` – normal
+  * `WallNut_1.png` – when taking damage
+  * `WallNut_2.png` – damaged state
+* **Card art:** `resources/graphics/Cards/card_wallnut.png` and
+  `card_wallnut_move.png`
+* **Optional sounds:** `resources/sounds/SuitcaseBarricade_deploy.ogg` and
+  `SuitcaseBarricade_death.ogg`
+
+### TaekwondoGuard (RepeaterPea)
+* **Sprite folder:** `resources/graphics/Plants/RepeaterPea/`
+* **Frames:** two files
+  * `RepeaterPea_0.png` – standing
+  * `RepeaterPea_1.png` – kicking
+* **Card art:** `resources/graphics/Cards/card_repeaterpea.png` and
+  `card_repeaterpea_move.png`
+* **Bullet:** uses the same pea assets as SojuBottleSlingshot
+* **Optional sounds:** `resources/sounds/TaekwondoGuard_deploy.ogg` and
+  `TaekwondoGuard_death.ogg`
+
+### MolotovStudent (CherryBomb)
+* **Sprite folder:** `resources/graphics/Plants/CherryBomb/`
+* **Frames:** single file `CherryBomb_0.png`
+* **Card art:** `resources/graphics/Cards/card_cherrybomb.png` and
+  `card_cherrybomb_move.png`
+* **Projectile:** optional frames in
+  `resources/graphics/Effects/MolotovProjectile/MolotovProjectile_0.png`,
+  `MolotovProjectile_1.png`, …
+* **Burn effect:** supply frames in
+  `resources/graphics/Effects/MolotovFire/MolotovFire_0.png`,
+  `MolotovFire_1.png`, … as desired
+* **Optional sounds:** `resources/sounds/MolotovStudent_deploy.ogg` and
+  `MolotovStudent_death.ogg`
+
+### KPopIdol (PuffShroom)
+* **Sprite folder:** `resources/graphics/Plants/PuffShroom/PuffShroom/`
+* **Frames:** single file `PuffShroom_0.png`
+* **Card art:** `resources/graphics/Cards/card_puffshroom.png` and
+  `card_puffshroom_move.png`
+* **Aura effect:** optional frames in
+  `resources/graphics/Effects/KPopAura/KPopAura_0.png`, …
+* **Optional sounds:** `resources/sounds/KPopIdol_deploy.ogg` and
+  `KPopIdol_death.ogg`
+
+Cards for all defenders must remain in `resources/graphics/Cards/` and keep
+their original `card_<plant>.png` and `card_<plant>_move.png` names so the
+menubar finds them.
 
 ## Start menu
-1. The main menu background (`MainMenu.png`) and the animated adventure button (`Adventure_0.png` / `Adventure_1.png`) reside in `resources/graphics/Screen/`.
-2. Edit these PNGs to reskin the menu.  If you change their sizes, adjust the rectangle values in `source/state/mainmenu.py` so the images display correctly.
-3. To add menu music, load it during `Menu.startup` in `source/state/mainmenu.py` and play it with `pygame.mixer.music`.
 
-## In‑game music
-1. To change level music, load a track in `source/state/level.py` when the level starts and stop it when the level ends.
-2. Example:
-   ```python
-   pg.mixer.music.load('resources/music/level.ogg')
-   pg.mixer.music.play(-1)
-   ```
+1. Replace `resources/graphics/Screen/MainMenu.png` (PNG background).
+2. Swap `Adventure_0.png` and `Adventure_1.png` for the start button's
+   two animation frames.
+3. If sizes change, tweak the rectangle values in
+   `source/state/mainmenu.py`.
+4. Optional menu music: load an `.ogg` in `Menu.startup` with
+   `pygame.mixer.music`.
 
-## Aura and burn effects
-1. Aura visuals such as the KPopIdol glow can be supplied in `resources/graphics/Effects/Aura/` as `Aura_0.png`, `Aura_1.png`, and so on.  Any folder placed under `resources/graphics/Effects/` is auto‑loaded by `tool.GFX`.
-2. Adjust the aura's radius or buff values by editing `applyIdolBuffs` in `source/state/level.py`.
-3. MolotovStudent's burning zone is driven by the `MolotovFire` class in `source/component/plant.py`.  Replace its visuals by adding flame frames under `resources/graphics/Effects/Fire/` and loading them inside that class.
-4. The burn duration and damage tick (default 6 s at 1 dps) can also be tweaked in `MolotovFire.update`.
+## Level backgrounds
+
+1. Gameplay and UI panels reside in `resources/graphics/Screen/` as PNGs
+   such as `ChooserBackground.png` or `PanelBackground.png`.
+2. Replace these files with images of the same dimensions to reskin the
+   play field and menus.
+
+## Sun points
+
+1. The pickup image is `resources/graphics/Plants/Sun/Sun_0.png`.
+2. Swap this file to change the currency icon and adjust `SUN_VALUE`
+   in `source/constants.py` if you want a different reward.
+
+## Sounds
+
+1. Store effects in `resources/sounds/` as `.ogg` or `.wav` files.
+2. Use names like `<Hero>_deploy.ogg` and `<Hero>_death.ogg` for plants
+   or `zombie_die.ogg` for enemies.
+3. Load them in `source/tool.py`'s `SFX` dictionary and trigger with
+   `SFX['name'].play()`.
+
+## Effects and other animations
+
+1. Aura, burn or custom effects live in
+   `resources/graphics/Effects/<EffectName>/` as sequential PNG frames
+   `<EffectName>_0.png`, `<EffectName>_1.png`, ...
+2. Classes such as `MolotovFire` or `applyIdolBuffs` can be edited to
+   adjust durations, radii or damage when introducing new effects.
 
 ## General tips
-- Maintain the original filenames when replacing assets to avoid editing code.
-- PNG images should preserve transparency and match the expected dimensions to prevent misalignment.
-- Run `python -m py_compile` on modified modules to confirm there are no syntax errors.
+
+- Keep original filenames and folder structures to minimize code edits.
+- PNG images should preserve transparency and match expected dimensions.
+- Run `python -m py_compile` or `python -m compileall` after touching
+  code to verify there are no syntax errors.
 
