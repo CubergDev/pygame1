@@ -81,6 +81,7 @@ TAEKWONDOGUARD = 'RepeaterPea'
 MOLOTOVSTUDENT = 'CherryBomb'
 KPOPIDOL = 'PuffShroom'
 
+# Legacy alias for compatibility
 PUFFSHROOM = KPOPIDOL
 
 

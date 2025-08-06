@@ -277,7 +277,8 @@ class TaekwondoGuard(Plant):
     def setAttack(self, zombie):
         self.state = c.ATTACK
         self.attack_zombie = zombie
-        self.attack_timer = self.current_time
+        # Trigger the first kick as soon as a zombie steps into range
+        self.attack_timer = self.current_time - self.attack_interval
 
     def attacking(self):
         if (self.attack_zombie is None or self.attack_zombie.state == c.DIE or not self.canAttack(self.attack_zombie)):
