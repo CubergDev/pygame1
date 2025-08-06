@@ -282,7 +282,13 @@ class TaekwondoGuard(Plant):
         self.frames = [self.idle_frame]
 
     def canAttack(self, zombie):
-        return self.rect.colliderect(zombie.rect)
+        """Return True if a zombie is within kicking range."""
+        # Extend the guard's attack range to twice its width so it can
+        # kick zombies that are a short distance away instead of only
+        # when they overlap the guard's own rectangle.
+        attack_rect = pg.Rect(self.rect.x, self.rect.y,
+                              self.rect.width * 2, self.rect.height)
+        return attack_rect.colliderect(zombie.rect)
 
     def setAttack(self, zombie):
         self.state = c.ATTACK
@@ -297,7 +303,8 @@ class TaekwondoGuard(Plant):
         interval = self.attack_interval / self.fire_rate_multiplier
         if (self.current_time - self.attack_timer) > interval:
             self.changeFrames([self.kick_frame])
-            self.attack_zombie.setDamage(2)
+            # Double the damage dealt by each kick
+            self.attack_zombie.setDamage(4)
             overlap = self.rect.right - self.attack_zombie.rect.left
             push = overlap + c.GRID_X_SIZE
             self.attack_zombie.rect.x += push
