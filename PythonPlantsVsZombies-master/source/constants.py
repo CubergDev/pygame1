@@ -111,7 +111,6 @@ CARD_KPOPIDOL = 'card_puffshroom'
 # Legacy card alias
 CARD_PUFFSHROOM = CARD_KPOPIDOL
 
-
 #BULLET INFO
 BULLET_PEA = 'PeaNormal'
 BULLET_DAMAGE_NORMAL = 1

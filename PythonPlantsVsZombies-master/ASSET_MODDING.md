@@ -61,6 +61,11 @@ frame counts update the matching rectangle entry in
 * **Frames:** 7 files `CherryBomb_0.png` … `CherryBomb_6.png`
 * **Card art:** `resources/graphics/Cards/card_cherrybomb.png` and
   `card_cherrybomb_move.png`
+
+* **Projectile:** optional frames in
+  `resources/graphics/Effects/MolotovProjectile/MolotovProjectile_0.png`,
+  `MolotovProjectile_1.png`, …
+
 * **Burn effect:** supply frames in
   `resources/graphics/Effects/MolotovFire/MolotovFire_0.png`,
   `MolotovFire_1.png`, … as desired
