@@ -168,21 +168,46 @@ def loadPlantImageRect():
     f.close()
     return data[c.PLANT_IMAGE_RECT]
 
+
 def load_all_sfx(directory, accept=(".wav", ".ogg")):
     """Load all sound files in *directory* into a dict keyed by filename."""
     sfx = {}
+    print(f"Looking for sounds in: {os.path.abspath(directory)}")
+
     if not os.path.isdir(directory):
+        print(f"Directory does not exist: {directory}")
         return sfx
+
+    print(f"Directory exists, scanning for files...")
     for name in os.listdir(directory):
+        print(f"Found file: {name}")
         base, ext = os.path.splitext(name)
         if ext.lower() in accept:
+            file_path = os.path.join(directory, name)
             try:
-                sfx[base] = pg.mixer.Sound(os.path.join(directory, name))
-            except pg.error:
-                pass
+                print(f"Attempting to load: {file_path}")
+                sfx[base] = pg.mixer.Sound(file_path)
+                print(f"Successfully loaded: {base}")
+            except pg.error as e:
+                print(f"Failed to load {name}: {e}")
+
+    print(f"Loaded {len(sfx)} sound files")
     return sfx
 
+# Replace the existing pg.init() section with this:
+pg.mixer.pre_init(frequency=22050, size=-16, channels=2, buffer=1024)
 pg.init()
+
+# Check if mixer initialized correctly
+mixer_info = pg.mixer.get_init()
+if mixer_info:
+    print(f"Mixer initialized: frequency={mixer_info[0]}, format={mixer_info[1]}, channels={mixer_info[2]}")
+else:
+    print("ERROR: Mixer failed to initialize!")
+
+# Set volume to maximum for testing
+pg.mixer.set_num_channels(16)  # Allow more simultaneous sounds
+
 pg.display.set_caption(c.ORIGINAL_CAPTION)
 SCREEN = pg.display.set_mode(c.SCREEN_SIZE)
 
@@ -190,3 +215,4 @@ GFX = load_all_gfx(os.path.join("resources","graphics"))
 ZOMBIE_RECT = loadZombieImageRect()
 PLANT_RECT = loadPlantImageRect()
 SFX = load_all_sfx(os.path.join("resources", "sounds"))
+print(SFX)

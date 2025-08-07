@@ -398,9 +398,50 @@ class Level(tool.State):
         self.mouse_rect.centery = y
         surface.blit(self.mouse_image, self.mouse_rect)
 
+    def drawScoreAndHighScore(self, surface):
+        # Prepare texts
+        score_str = f"Score: {self.score}"
+        high_score_str = f"High Score: {self.high_score}"
+
+        font = self.score_font
+        color = (255, 255, 255)
+        border = (40, 40, 40)
+        background_color = (0, 0, 0, 140)  # semi-transparent black (use alpha if using Surface with SRCALPHA)
+
+        score_surf = font.render(score_str, True, color)
+        high_score_surf = font.render(high_score_str, True, color)
+
+        margin = 30
+        spacing = 10
+        y = margin
+
+        high_score_rect = high_score_surf.get_rect()
+        score_rect = score_surf.get_rect()
+
+        high_score_rect.topright = (c.SCREEN_WIDTH - margin, y)
+        score_rect.topright = (c.SCREEN_WIDTH - margin, y + high_score_rect.height + spacing)
+
+        # Compute the area to cover
+        border_padding = 8
+        container_width = max(high_score_rect.width, score_rect.width) + border_padding * 2
+        container_height = high_score_rect.height + score_rect.height + spacing + border_padding * 2
+        container_x = c.SCREEN_WIDTH - margin - container_width + border_padding
+        container_y = y - border_padding
+
+        # Fill rectangle to clear
+        rect = pg.Rect(container_x, container_y, container_width, container_height)
+        pg.draw.rect(surface, background_color, rect)
+
+        # Optional: Draw border for better visibility
+        pg.draw.rect(surface, border, rect, 2)
+
+        # Draw text
+        surface.blit(high_score_surf, high_score_rect)
+        surface.blit(score_surf, score_rect)
+
     def draw(self, surface):
         self.level.blit(self.background, self.viewport, self.viewport)
-        surface.blit(self.level, (0,0), self.viewport)
+        surface.blit(self.level, (0, 0), self.viewport)
         if self.state == c.CHOOSE:
             self.panel.draw(surface)
         elif self.state == c.PLAY:
@@ -418,13 +459,8 @@ class Level(tool.State):
             self.head_group.draw(surface)
             self.sun_group.draw(surface)
 
-            score_surf = self.score_font.render(f"Score: {self.score}", True, c.BLACK)
-            high_surf = self.score_font.render(f"High: {self.high_score}", True, c.BLACK)
-            score_rect = score_surf.get_rect(topright=(c.SCREEN_WIDTH - 10, 10))
-            high_rect = high_surf.get_rect(topright=(c.SCREEN_WIDTH - 10, score_rect.bottom + 5))
-            surface.blit(score_surf, score_rect)
-            surface.blit(high_surf, high_rect)
+            # Use unified, flicker-free score display
+            self.drawScoreAndHighScore(surface)
 
             if self.drag_plant:
                 self.drawMouseShow(surface)
-

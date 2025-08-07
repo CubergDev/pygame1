@@ -116,6 +116,7 @@ class Plant(pg.sprite.Sprite):
         self.sun_multiplier = 1
 
         self.sound = tool.SFX.get(name)
+        print(self.sound)
         self.deploy_sound = tool.SFX.get(f"{name}_deploy")
         self.death_sound = tool.SFX.get(f"{name}_death")
         if self.deploy_sound:
@@ -178,7 +179,15 @@ class Plant(pg.sprite.Sprite):
 
     def play_sound(self):
         if self.sound:
-            self.sound.play()
+            print(f"Playing sound for {self.name}: {self.sound}")
+            self.sound.set_volume(1.0)  # Set volume to maximum
+            channel = self.sound.play()
+            if channel:
+                print(f"Sound playing on channel: {channel}")
+            else:
+                print("Failed to get audio channel")
+        else:
+            print(f"No sound available for {self.name}")
 
     def play_death_sound(self):
         if self.death_sound:
@@ -312,22 +321,24 @@ class TaekwondoGuard(Plant):
     def setAttack(self, zombie):
         self.state = c.ATTACK
         self.attack_zombie = zombie
-        # Trigger the first kick as soon as a zombie steps into range
-        self.attack_timer = self.current_time - self.attack_interval
+        # Remove instant attack - let the normal cooldown apply
+        # self.attack_timer = self.current_time - self.attack_interval
 
     def attacking(self):
         if (self.attack_zombie is None or self.attack_zombie.state == c.DIE or not self.canAttack(self.attack_zombie)):
             self.setIdle()
             return
+
         interval = self.attack_interval / self.fire_rate_multiplier
         if (self.current_time - self.attack_timer) > interval:
             self.changeFrames([self.kick_frame])
 
             # Reduced kick damage for balance
-            self.attack_zombie.setDamage(2)
+            self.attack_zombie.setDamage(2)  # Further reduced from 2 to 1
 
+            # Reduced pushback to prevent zombies getting stuck in kick loops
             overlap = self.rect.right - self.attack_zombie.rect.left
-            push = overlap + c.GRID_X_SIZE
+            push = min(overlap + 20, c.GRID_X_SIZE // 2)  # Cap the pushback
             self.attack_zombie.rect.x += push
             self.attack_zombie.setWalk()
             self.play_sound()
@@ -467,16 +478,18 @@ class MolotovFire(pg.sprite.Sprite):
         self.animate_timer = start_time
         self.animate_interval = 100
 
-    def update(self, game_info, zombie_groups):
+    def update(self, game_info, all_zombie_groups):
         current_time = game_info[c.CURRENT_TIME]
         if current_time - self.start_time > 6000:
             self.kill()
             return
         if current_time - self.damage_timer >= 1000:
             center = pg.Vector2(self.rect.center)
-            for group in zombie_groups:
+            # Check all zombie groups from all lanes, not just specific ones
+            for group in all_zombie_groups:
                 for zombie in group:
-                    if center.distance_to(zombie.rect.center) <= self.radius:
+                    zombie_center = pg.Vector2(zombie.rect.center)
+                    if center.distance_to(zombie_center) <= self.radius:
                         zombie.setDamage(0.5)
             self.damage_timer = current_time
         if self.frame_num and (current_time - self.animate_timer) > self.animate_interval:
