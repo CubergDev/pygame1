@@ -1,9 +1,11 @@
 __author__ = 'from cuberg with love'
 
-import pygame as pg
 from .. import tool
 from .. import constants as c
-
+import math
+import pygame as pg
+import random
+from ..tool import GFX, get_image
 class Car(pg.sprite.Sprite):
     def __init__(self, x, y, map_y):
         super().__init__()
@@ -114,9 +116,6 @@ class Plant(pg.sprite.Sprite):
         self.hit_timer = 0
         self.fire_rate_multiplier = 1
         self.sun_multiplier = 1
-
-        self.sound = tool.SFX.get(name)
-        print(self.sound)
         self.deploy_sound = tool.SFX.get(f"{name}_deploy")
         self.death_sound = tool.SFX.get(f"{name}_death")
         if self.deploy_sound:
@@ -178,14 +177,9 @@ class Plant(pg.sprite.Sprite):
             self.image.set_alpha(192)
 
     def play_sound(self):
-        if self.sound:
-            print(f"Playing sound for {self.name}: {self.sound}")
-            self.sound.set_volume(1.0)  # Set volume to maximum
-            channel = self.sound.play()
-            if channel:
-                print(f"Sound playing on channel: {channel}")
-            else:
-                print("Failed to get audio channel")
+        if self.deploy_sound:
+            self.deploy_sound.set_volume(0.6)  # Set volume to maximum
+            channel = self.deploy_sound.play()
         else:
             print(f"No sound available for {self.name}")
 
@@ -257,14 +251,21 @@ class EomukVendor(Plant):
         super().__init__(x, y, c.EOMUKVENDOR, c.PLANT_HEALTH, None)
         self.sun_timer = 0
         self.sun_group = sun_group
+        self.sun_count = 0
         self.sun_interval = c.FLOWER_SUN_INTERVAL
+        self.base_sun_multiplier = 1.0
+        self.buff_sun_multiplier = 1.0
     def idling(self):
-        interval = self.sun_interval / self.sun_multiplier
+        interval = self.sun_interval / (self.base_sun_multiplier * self.buff_sun_multiplier)
         if self.sun_timer == 0:
             self.sun_timer = self.current_time - (interval - 6000)
         elif (self.current_time - self.sun_timer) > interval:
+            if self.sun_count % 8 == 0:
+                self.play_sound()
+            self.sun_count += 1
             self.sun_group.add(Sun(self.rect.centerx, self.rect.bottom, self.rect.right, self.rect.bottom + self.rect.h // 2))
-            self.play_sound()
+            if self.sun_count % 30 == 0:
+                self.base_sun_multiplier += 0.25
             self.sun_timer = self.current_time
 
 
@@ -273,13 +274,17 @@ class SojuBottleSlingshot(Plant):
         super().__init__(x, y, c.SOJUBOTTLESLINGSHOT, c.PLANT_HEALTH, bullet_group)
         self.shoot_timer = 0
         self.shoot_interval = 900
-
+        self.shot_count = 0
     def attacking(self):
         interval = self.shoot_interval / self.fire_rate_multiplier
         if (self.current_time - self.shoot_timer) > interval:
+            if self.shot_count % 19 == 0:
+                self.play_sound()
+            self.shot_count += 1
+
             self.bullet_group.add(Bullet(self.rect.right, self.rect.y, self.rect.y,
                                          c.BULLET_PEA, c.BULLET_DAMAGE_NORMAL, ice=True))
-            self.play_sound()
+
             self.shoot_timer = self.current_time
 
 
@@ -290,6 +295,7 @@ class TaekwondoGuard(Plant):
         self.attack_interval = 2000
         self.attack_zombie = None
         self.current_time = 0
+        self.kick_count = 0
 
     def loadImages(self, name, scale):
         frames = tool.GFX[name]
@@ -332,7 +338,9 @@ class TaekwondoGuard(Plant):
         interval = self.attack_interval / self.fire_rate_multiplier
         if (self.current_time - self.attack_timer) > interval:
             self.changeFrames([self.kick_frame])
-
+            if self.kick_count % 9 == 0:
+                self.play_sound()
+            self.kick_count += 1
             # Reduced kick damage for balance
             self.attack_zombie.setDamage(2)  # Further reduced from 2 to 1
 
@@ -341,7 +349,7 @@ class TaekwondoGuard(Plant):
             push = min(overlap + 20, c.GRID_X_SIZE // 2)  # Cap the pushback
             self.attack_zombie.rect.x += push
             self.attack_zombie.setWalk()
-            self.play_sound()
+
             self.attack_timer = self.current_time
         elif (self.current_time - self.attack_timer) > 200:
             self.changeFrames([self.idle_frame])
@@ -380,50 +388,63 @@ class SuitcaseBarricade(Plant):
 
 
 class MolotovProjectile(pg.sprite.Sprite):
-    def __init__(self, centerx, bottom, level):
+    def __init__(self, centerx, bottom, level, land_x=None,):
         super().__init__()
-        self.frames = []
-        name = 'MolotovProjectile'
-        if name in tool.GFX:
-            for frame in tool.GFX[name]:
-                rect = frame.get_rect()
-                self.frames.append(tool.get_image(frame, 0, 0, rect.w, rect.h))
-        if self.frames:
-            self.image = self.frames[0]
-        else:
-            self.image = pg.Surface((20, 20), pg.SRCALPHA)
-            pg.draw.circle(self.image, (255, 120, 0), (10, 10), 10)
-        self.rect = self.image.get_rect()
-        self.rect.centerx = centerx
-        self.rect.bottom = bottom
         self.level = level
-        self.x_vel = 13
-        self.y_vel = -8
+
+        # ─── Load bottle graphic ──────────────────────────────────
+        frames = tool.GFX.get('MolotovProjectile', [])
+        if frames:
+            raw = frames[0]
+            rect = raw.get_rect()
+            self.original_image = tool.get_image(raw, 0, 0, rect.w, rect.h)
+        else:
+            surf = pg.Surface((20, 20), pg.SRCALPHA)
+            pg.draw.circle(surf, (255, 120, 0), (10, 10), 10)
+            self.original_image = surf
+
+        # initial image & rect (pivot at bottom-center)
+        self.image = self.original_image
+        self.rect  = self.image.get_rect(midbottom=(centerx, bottom))
+
+        # ─── Physics params ───────────────────────────────────────
+        self.x_vel   = 13
+        self.y_vel   = -8
         self.gravity = 0.5
-        self.ground = bottom
-        self.state = c.FLY
+
+        # ─── Randomize landing X: 4–6 tiles ahead ─────────────────
+        if land_x is not None:
+            self.land_x = land_x
+        else:
+            tiles_ahead = random.randint(4, 6)
+            self.land_x = centerx + tiles_ahead * c.GRID_X_SIZE
+
+        self.state        = c.FLY
         self.current_time = 0
-        self.animate_timer = 0
-        self.animate_interval = 100
-        self.frame_index = 0
 
     def update(self, game_info):
         self.current_time = game_info[c.CURRENT_TIME]
+
         if self.state == c.FLY:
+            # 1) Move
             self.rect.x += self.x_vel
             self.rect.y += self.y_vel
-            self.y_vel += self.gravity
-            if self.rect.bottom >= self.ground:
-                self.rect.bottom = self.ground
-                self.on_hit()
-                return
-            if self.rect.x > c.SCREEN_WIDTH:
+            self.y_vel  += self.gravity
+
+            # 2) Rotate to match flight path
+            angle   = math.degrees(math.atan2(-self.y_vel, self.x_vel))
+            rotated = pg.transform.rotate(self.original_image, angle)
+            old_cen = self.rect.center
+            self.image = rotated
+            self.rect  = self.image.get_rect(center=old_cen)
+
+            # 3) Explode on reaching target X
+            if self.rect.centerx >= self.land_x:
+                return self.on_hit()
+
+            # 4) Cleanup if off‐screen
+            if self.rect.left > c.SCREEN_WIDTH:
                 self.kill()
-                return
-            if self.frames and (self.current_time - self.animate_timer) > self.animate_interval:
-                self.frame_index = (self.frame_index + 1) % len(self.frames)
-                self.image = self.frames[self.frame_index]
-                self.animate_timer = self.current_time
 
     def on_hit(self):
         fire = MolotovFire(self.rect.centerx, self.rect.bottom, self.current_time)
@@ -432,7 +453,6 @@ class MolotovProjectile(pg.sprite.Sprite):
 
     def draw(self, surface):
         surface.blit(self.image, self.rect)
-
 class MolotovStudent(Plant):
     def __init__(self, x, y, level):
         _, map_y = level.map.getMapIndex(x, y)
@@ -441,16 +461,33 @@ class MolotovStudent(Plant):
         self.level = level
         self.throw_interval = 5000
         self.throw_timer = -self.throw_interval
-
+        self.throw_count = 0
+        self._last_tiles_ahead = None
     def attacking(self):
         interval = self.throw_interval / self.fire_rate_multiplier
 
         if (self.current_time - self.throw_timer) >= interval:
-            bottle = MolotovProjectile(self.rect.centerx, self.rect.bottom, self.level)
-            bottle.current_time = self.current_time
+            # play sound every 8th throw
+            if self.throw_count % 12 == 0:
+                self.play_sound()
+            self.throw_count += 1
 
+            # ─── choose a new random distance 4–6 tiles, different from last time ───
+            tiles_ahead = random.randint(4, 6)
+            if self._last_tiles_ahead is not None:
+                # re-roll until different (only 3 values, so this is cheap)
+                while tiles_ahead == self._last_tiles_ahead:
+                    tiles_ahead = random.randint(4, 6)
+            self._last_tiles_ahead = tiles_ahead
+
+            start_x = self.rect.centerx
+            target_x = start_x + tiles_ahead * c.GRID_X_SIZE
+
+            # spawn the rotating MolotovProjectile with this landing X
+            bottle = MolotovProjectile(start_x, self.rect.bottom, self.level, land_x=target_x)
+            bottle.current_time = self.current_time
             self.bullet_group.add(bottle)
-            self.play_sound()
+
             self.throw_timer = self.current_time
 
 class MolotovFire(pg.sprite.Sprite):
@@ -502,7 +539,7 @@ class KPopIdol(Plant):
         super().__init__(x, y, c.KPOPIDOL, c.PLANT_HEALTH, None)
         radius = c.GRID_X_SIZE * 2
         self.aura_image = pg.Surface((radius * 2, radius * 2), pg.SRCALPHA)
-        pg.draw.circle(self.aura_image, (255, 192, 203, 80), (radius, radius), radius)
+        pg.draw.circle(self.aura_image, (255, 192, 203, 40), (radius, radius), radius)
 
     def draw(self, surface):
         aura_rect = self.aura_image.get_rect()

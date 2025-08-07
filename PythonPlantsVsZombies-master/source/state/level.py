@@ -132,7 +132,19 @@ class Level(tool.State):
         self.fire_group.update(self.game_info, self.zombie_groups)
         self.head_group.update(self.game_info)
         self.sun_group.update(self.game_info)
-        
+        if not self.drag_plant and mouse_pos and mouse_click[1]:
+            for row in range(self.map_y_len):
+                for p in self.plant_groups[row]:
+                    if p.rect.collidepoint(mouse_pos):
+                        # Remove plant from map/grid and sprite group
+                        self.killPlant(p)
+                        # Refund 25 dosiraks (sun)
+                        self.menubar.increaseSunValue(c.SUN_VALUE)
+                        # Only dig one plant per click
+                        break
+                else:
+                    continue
+                break
         if not self.drag_plant and mouse_pos and mouse_click[0]:
             result = self.menubar.checkCardClick(mouse_pos)
             if result:
@@ -324,7 +336,7 @@ class Level(tool.State):
         for i in range(self.map_y_len):
             for p in self.plant_groups[i]:
                 p.fire_rate_multiplier = 1
-                p.sun_multiplier = 1
+                p.buff_sun_multiplier = 1
 
         idols = []
         for i in range(self.map_y_len):
@@ -340,9 +352,9 @@ class Level(tool.State):
                     dx = other_x - idol_x
                     dy = row_index - row
                     if dx * dx + dy * dy <= 4:
-                        other.fire_rate_multiplier *= 1.2
+                        other.fire_rate_multiplier *= 1.3
                         if other.name == c.EOMUKVENDOR:
-                            other.sun_multiplier *= 1.1
+                            other.buff_sun_multiplier *= 1.1
 
     def killPlant(self, plant):
         x, y = plant.getPosition()
